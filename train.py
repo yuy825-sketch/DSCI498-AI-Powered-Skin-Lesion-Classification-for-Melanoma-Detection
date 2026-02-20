@@ -121,6 +121,10 @@ def main() -> int:
         counts = np.bincount(np.array(y_train), minlength=len(classes)).astype(np.float32)
         weights = (counts.sum() / (counts + 1e-6))
         weights = weights / weights.mean()
+        mel_multiplier = float(cfg["train"].get("mel_weight_multiplier", 1.0))
+        if mel_multiplier != 1.0 and "mel" in class_to_idx:
+            weights[class_to_idx["mel"]] *= mel_multiplier
+            weights = weights / weights.mean()
         class_weights = torch.tensor(weights, dtype=torch.float32, device=device)
     else:
         class_weights = None
