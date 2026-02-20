@@ -1,19 +1,19 @@
 # Local-only planning and notes (do not push)
-info.md
-project/
+/info.md
+/project/
 
 # Reproducibility run artifacts (do not push by default)
-runs/**
-!runs/
-!runs/README.md
+/runs/**
+!/runs/
+!/runs/README.md
 
 # Data and generated artifacts
-data/
-datasets/
-artifacts/
-checkpoints/
-outputs/
-logs/
+/data/
+/datasets/
+/artifacts/
+/checkpoints/
+/outputs/
+/logs/
 
 # Python
 __pycache__/
