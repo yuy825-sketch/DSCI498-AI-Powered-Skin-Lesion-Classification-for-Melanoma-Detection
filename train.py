@@ -7,11 +7,12 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import ConcatDataset, DataLoader, Subset
 from torchvision import transforms
 
 from dsci498_skin.data.ham10000 import DX_TO_NAME, Ham10000Dataset, build_samples
 from dsci498_skin.data.split import group_shuffle_split
+from dsci498_skin.data.synthetic import SyntheticImageFolder
 from dsci498_skin.models.cnn import CnnConfig, build_model
 from dsci498_skin.runpack import RunMeta, copy_config, create_run_dir, git_head_sha, utc_now, write_meta
 from dsci498_skin.train_utils import evaluate, save_json, seed_everything
@@ -75,6 +76,11 @@ def main() -> int:
     train_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=train_tf), split.train_idx)
     val_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=eval_tf), split.val_idx)
     test_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=eval_tf), split.test_idx)
+
+    synthetic_root = cfg["dataset"].get("synthetic_root", None)
+    if synthetic_root:
+        synth_ds = SyntheticImageFolder(root=Path(synthetic_root), class_to_idx=class_to_idx, transform=train_tf)
+        train_ds = ConcatDataset([train_ds, synth_ds])
 
     num_workers = int(cfg["train"]["num_workers"])
     batch_size = int(cfg["train"]["batch_size"])

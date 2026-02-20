@@ -50,6 +50,16 @@ python train.py --config configs/baseline.json --run-name baseline-effnetb0
 python scripts/export_latest.py
 ```
 
+## Generative augmentation (VAE) (planned)
+We include a simple **conditional VAE (cVAE)** that can generate class-conditioned synthetic samples.
+
+Workflow (high level):
+```
+python train_vae.py --config configs/vae.json --run-name cvae64
+python scripts/generate_synthetic.py --run-dir runs/<cvae_run_dir> --out-root artifacts/synth --per-class 200
+python train.py --config configs/baseline_with_synth.json --run-name baseline+synthetic
+```
+
 ## Demo app (planned)
 The Streamlit app supports:
 - uploading an image

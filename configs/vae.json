@@ -1,0 +1,19 @@
+{
+  "dataset": {
+    "root": "data/ham10000",
+    "image_size": 64
+  },
+  "train": {
+    "seed": 1,
+    "epochs": 30,
+    "batch_size": 128,
+    "lr": 0.001,
+    "weight_decay": 0.0,
+    "num_workers": 4
+  },
+  "model": {
+    "latent_dim": 128,
+    "label_emb_dim": 16
+  }
+}
+
