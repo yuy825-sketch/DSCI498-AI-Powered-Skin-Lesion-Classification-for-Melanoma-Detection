@@ -85,6 +85,7 @@ We report:
 | Baseline (EffNet-B0 + class-weighted CE, 10 epochs) | `configs/baseline.json` | 0.7637 | 0.6650 | 0.7581 | `results/summary_baseline.md`, `results/confusion_matrix_baseline.png` |
 | Imbalance sampler (EffNet-B0 + weighted sampler, 15 epochs) | `configs/imbalance_sampler.json` | 0.8006 | 0.6756 | 0.7016 | `results/summary_sampler.md`, `results/confusion_matrix_sampler.png` |
 | Melanoma-weighted loss (EffNet-B0 + mel multiplier=3, 15 epochs) | `configs/mel_sensitive.json` | 0.7597 | 0.6285 | 0.7419 | `results/summary_melweight3.md`, `results/confusion_matrix_melweight3.png` |
+| cVAE synthetic augmentation (EffNet-B0 + extra synthetic images, 10 epochs) | `configs/baseline_with_synth.json` | 0.7926 | 0.6979 | 0.6694 | `results/summary_synth.md`, `results/confusion_matrix_synth.png`, `results/vae_samples_grid.png` |
 
 Grad-CAM examples: `results/gradcam/README.md`.
 
