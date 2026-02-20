@@ -13,6 +13,7 @@ from torchvision import transforms
 from dsci498_skin.data.ham10000 import DX_TO_NAME, Ham10000Dataset, build_samples
 from dsci498_skin.data.split import group_shuffle_split
 from dsci498_skin.models.cnn import CnnConfig, build_model
+from dsci498_skin.runpack import RunMeta, copy_config, create_run_dir, git_head_sha, utc_now, write_meta
 from dsci498_skin.train_utils import evaluate, save_json, seed_everything
 
 
@@ -46,14 +47,16 @@ def _make_transforms(image_size: int) -> tuple[transforms.Compose, transforms.Co
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--outdir", type=Path, default=Path("runs/manual_run"))
+    parser.add_argument("--outdir", type=Path, default=None)
+    parser.add_argument("--run-name", type=str, default="baseline")
     args = parser.parse_args()
 
     cfg = _load_config(args.config)
     dataset_root = Path(cfg["dataset"]["root"])
     image_size = int(cfg["dataset"]["image_size"])
 
-    seed_everything(int(cfg["train"]["seed"]))
+    train_seed = int(cfg["train"]["seed"])
+    seed_everything(train_seed)
 
     samples = build_samples(dataset_root)
     classes = sorted({s.dx for s in samples})
@@ -69,7 +72,6 @@ def main() -> int:
     )
 
     train_tf, eval_tf = _make_transforms(image_size)
-    base_ds = Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=None)
     train_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=train_tf), split.train_idx)
     val_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=eval_tf), split.val_idx)
     test_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=eval_tf), split.test_idx)
@@ -92,7 +94,7 @@ def main() -> int:
 
     use_class_weights = bool(cfg["train"].get("use_class_weights", False))
     if use_class_weights:
-        y_train = [base_ds[i][1] for i in split.train_idx]
+        y_train = [class_to_idx[samples[i].dx] for i in split.train_idx]
         counts = np.bincount(np.array(y_train), minlength=len(classes)).astype(np.float32)
         weights = (counts.sum() / (counts + 1e-6))
         weights = weights / weights.mean()
@@ -107,9 +109,25 @@ def main() -> int:
         weight_decay=float(cfg["train"]["weight_decay"]),
     )
 
-    outdir = args.outdir
-    outdir.mkdir(parents=True, exist_ok=True)
-    save_json(outdir / "config.json", cfg)
+    repo_root = Path(__file__).resolve().parent
+    if args.outdir is None:
+        outdir = create_run_dir(runs_root=repo_root / "runs", name=args.run_name)
+    else:
+        outdir = args.outdir
+        outdir.mkdir(parents=True, exist_ok=True)
+
+    config_copy = copy_config(args.config, outdir)
+    write_meta(
+        outdir / "meta.json",
+        RunMeta(
+            created_utc=utc_now(),
+            name=args.run_name,
+            cmd=f"python train.py --config {args.config}",
+            config_path=str(config_copy),
+            git_head_sha=git_head_sha(repo_root),
+            extra={"train_seed": train_seed},
+        ),
+    )
     save_json(
         outdir / "classes.json",
         {
@@ -169,4 +187,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

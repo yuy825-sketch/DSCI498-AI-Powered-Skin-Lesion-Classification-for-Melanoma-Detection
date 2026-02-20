@@ -30,6 +30,7 @@ data/ham10000/
 1) Create an environment (conda/venv) and install dependencies:
 ```
 pip install -r requirements.txt
+pip install -e .
 ```
 
 2) Run a quick smoke test (CPU):
@@ -42,6 +43,12 @@ The training scripts will save:
 - checkpoints locally (not committed)
 - run metadata + metrics under `runs/` (not committed)
 - a small, presentation-ready results summary under `results/` (committed)
+
+Example (after the dataset is available under `data/ham10000/`):
+```
+python train.py --config configs/baseline.json --run-name baseline-effnetb0
+python scripts/export_latest.py
+```
 
 ## Demo app (planned)
 The Streamlit app will support:
