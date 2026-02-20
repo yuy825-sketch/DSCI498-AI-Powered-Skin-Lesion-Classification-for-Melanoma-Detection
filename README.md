@@ -51,10 +51,15 @@ python scripts/export_latest.py
 ```
 
 ## Demo app (planned)
-The Streamlit app will support:
+The Streamlit app supports:
 - uploading an image
 - showing top-k predictions
 - displaying a Grad-CAM overlay
+
+Run it:
+```
+streamlit run app/app.py
+```
 
 ## Results (to be filled)
 We will report (at minimum):
