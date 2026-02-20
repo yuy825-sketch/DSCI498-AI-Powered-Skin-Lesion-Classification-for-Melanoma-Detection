@@ -67,7 +67,7 @@ def _write_summary(metrics: dict, out_md: Path) -> None:
     out_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def export_run(*, run_dir: Path, out_dir: Path) -> None:
+def export_run(*, run_dir: Path, out_dir: Path, tag: str | None = None) -> None:
     metrics_path = run_dir / "metrics.json"
     classes_path = run_dir / "classes.json"
     metrics = _load_json(metrics_path)
@@ -77,20 +77,23 @@ def export_run(*, run_dir: Path, out_dir: Path) -> None:
     labels = [idx_to_class[str(i)] for i in range(len(idx_to_class))]
     cm = np.array(metrics["test"]["confusion_matrix"], dtype=np.int64)
 
-    _write_summary(metrics, out_dir / "summary.md")
-    _save_confusion_matrix(cm, labels, out_dir / "confusion_matrix.png")
+    suffix = f"_{tag}" if tag else ""
+    _write_summary(metrics, out_dir / f"summary{suffix}.md")
+    _save_confusion_matrix(cm, labels, out_dir / f"confusion_matrix{suffix}.png")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", type=Path, required=True, help="Path to a run folder containing metrics.json")
     parser.add_argument("--out-dir", type=Path, default=Path("results"))
+    parser.add_argument("--tag", type=str, default=None, help="Optional suffix for output filenames")
     args = parser.parse_args()
 
-    export_run(run_dir=args.run_dir, out_dir=args.out_dir)
+    export_run(run_dir=args.run_dir, out_dir=args.out_dir, tag=args.tag)
 
-    print("Wrote:", args.out_dir / "summary.md")
-    print("Wrote:", args.out_dir / "confusion_matrix.png")
+    suffix = f"_{args.tag}" if args.tag else ""
+    print("Wrote:", args.out_dir / f"summary{suffix}.md")
+    print("Wrote:", args.out_dir / f"confusion_matrix{suffix}.png")
     return 0
 
 

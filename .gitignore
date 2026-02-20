@@ -20,6 +20,7 @@ __pycache__/
 *.py[cod]
 *.pkl
 *.joblib
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/

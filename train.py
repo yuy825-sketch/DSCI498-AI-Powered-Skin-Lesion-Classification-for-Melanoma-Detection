@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import ConcatDataset, DataLoader, Subset
+from torch.utils.data import ConcatDataset, DataLoader, Subset, WeightedRandomSampler
 from torchvision import transforms
 
 from dsci498_skin.data.ham10000 import DX_TO_NAME, Ham10000Dataset, build_samples
@@ -84,7 +84,24 @@ def main() -> int:
 
     num_workers = int(cfg["train"]["num_workers"])
     batch_size = int(cfg["train"]["batch_size"])
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+
+    use_weighted_sampler = bool(cfg["train"].get("use_weighted_sampler", False))
+    sampler = None
+    if use_weighted_sampler and isinstance(train_ds, Subset):
+        train_labels = [class_to_idx[samples[i].dx] for i in split.train_idx]
+        counts = np.bincount(np.array(train_labels), minlength=len(classes)).astype(np.float32)
+        w_per_class = (counts.sum() / (counts + 1e-6))
+        w_per_class = w_per_class / w_per_class.mean()
+        sample_weights = [float(w_per_class[y]) for y in train_labels]
+        sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
+
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        shuffle=(sampler is None),
+        sampler=sampler,
+        num_workers=num_workers,
+    )
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
