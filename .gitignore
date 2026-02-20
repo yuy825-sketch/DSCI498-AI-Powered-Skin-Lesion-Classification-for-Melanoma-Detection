@@ -1,0 +1,36 @@
+# Local-only planning and notes (do not push)
+info.md
+project/
+
+# Reproducibility run artifacts (do not push by default)
+runs/**
+!runs/
+!runs/README.md
+
+# Data and generated artifacts
+data/
+datasets/
+artifacts/
+checkpoints/
+outputs/
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pkl
+*.joblib
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments / secrets
+.env
+.venv/
+venv/
+env/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
