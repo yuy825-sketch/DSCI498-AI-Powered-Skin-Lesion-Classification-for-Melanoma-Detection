@@ -7,3 +7,6 @@ Large artifacts are intentionally not committed:
 - checkpoints (`checkpoints/`)
 - full run logs (`runs/`)
 
+Start here:
+- Results report (summary + conclusions): `REPORT.md`
+- Figure index (each image meaning + conclusion): `FIGURES.md`

@@ -120,6 +120,7 @@ Example Grad-CAM overlay:
 
 Full results and figure notes:
 - Results folder: `results/README.md`
+- Results report: `results/REPORT.md`
 - Figure index: `results/FIGURES.md`
 - Grad-CAM notes: `results/gradcam/FIGURES.md`
 
