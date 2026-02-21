@@ -21,6 +21,10 @@ This file documents each visualization in `results/`, what it shows, and the con
 - **What**: Confusion matrix for the “cVAE synthetic augmentation” ablation.
 - **Conclusion**: Macro-F1 improved in this run, but melanoma recall decreased vs baseline (trade-off).
 
+### `confusion_matrix_effnetb2.png`
+- **What**: Confusion matrix for the tuned EfficientNet-B2 run.
+- **Conclusion**: This run achieved the best macro-F1 among the committed experiments and slightly improved melanoma recall vs the baseline.
+
 ## Metric summaries
 
 Each `summary_*.md` records:
@@ -39,3 +43,31 @@ Each `summary_*.md` records:
 
 See `gradcam/README.md` and `gradcam/FIGURES.md` for the Grad-CAM gallery and per-image notes.
 
+## Training dynamics
+
+### `training_curves_effnetb2.png`
+- **What**: Train loss + validation accuracy/macro-F1/melanoma recall across epochs.
+- **How generated**: `python scripts/plot_training.py --run-dir runs/<effnetb2_run> --out results/training_curves_effnetb2.png`
+- **Conclusion**: Shows training stability and how validation melanoma recall evolves (checkpoint selection uses val melanoma recall for some configs).
+
+## Melanoma detection operating point (one-vs-rest)
+
+### `mel_pr_curve_effnetb2.png`
+- **What**: Precision-Recall curve for melanoma (`mel`) one-vs-rest on the test split.
+- **How generated**: `python scripts/plot_mel_pr.py --run-dir runs/<effnetb2_run> --out results/mel_pr_curve_effnetb2.png`
+- **Conclusion**: Visualizes the sensitivity/precision trade-off when using `P(mel)` as a detection score.
+
+### `mel_threshold_effnetb2.md`
+- **What**: Threshold sweep table for melanoma one-vs-rest, including a suggested operating point achieving recall ≥ 0.85.
+- **How generated**: `python scripts/mel_threshold_analysis.py --run-dir runs/<effnetb2_run> --out-md results/mel_threshold_effnetb2.md --min-recall 0.85`
+- **Conclusion**: Demonstrates that melanoma sensitivity > 0.85 is achievable by lowering the detection threshold (with reduced precision).
+
+### `mel_threshold_curve_effnetb2.png`
+- **What**: Precision and recall vs threshold plot for melanoma one-vs-rest.
+- **How generated**: `python scripts/plot_mel_threshold_curve.py --run-dir runs/<effnetb2_run> --out results/mel_threshold_curve_effnetb2.png --min-recall 0.85`
+- **Conclusion**: Makes the threshold trade-off visually clear for presentation/poster use.
+
+## Additional (exploratory) plots
+
+These are included for completeness when comparing tuning attempts:
+- `summary_effnetb0_long.md`, `confusion_matrix_effnetb0_long.png`, `training_curves_effnetb0_long.png`, `mel_pr_curve_effnetb0_long.png`, `mel_threshold_effnetb0_long.md`

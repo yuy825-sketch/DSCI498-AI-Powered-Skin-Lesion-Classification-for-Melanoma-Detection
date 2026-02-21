@@ -91,6 +91,7 @@ I report:
 | Imbalance sampler (EffNet-B0 + weighted sampler, 15 epochs) | `configs/imbalance_sampler.json` | 0.8006 | 0.6756 | 0.7016 | `results/summary_sampler.md`, `results/confusion_matrix_sampler.png` |
 | Melanoma-weighted loss (EffNet-B0 + mel multiplier=3, 15 epochs) | `configs/mel_sensitive.json` | 0.7597 | 0.6285 | 0.7419 | `results/summary_melweight3.md`, `results/confusion_matrix_melweight3.png` |
 | cVAE synthetic augmentation (EffNet-B0 + extra synthetic images, 10 epochs) | `configs/baseline_with_synth.json` | 0.7926 | 0.6979 | 0.6694 | `results/summary_synth.md`, `results/confusion_matrix_synth.png`, `results/vae_samples_grid.png` |
+| Tuned backbone (EffNet-B2, checkpoint selected by val melanoma recall) | `configs/effnetb2_mel_select.json` | 0.7697 | 0.6958 | 0.7823 | `results/summary_effnetb2.md`, `results/confusion_matrix_effnetb2.png`, `results/training_curves_effnetb2.png`, `results/mel_pr_curve_effnetb2.png`, `results/mel_threshold_effnetb2.md`, `results/mel_threshold_curve_effnetb2.png` |
 
 Grad-CAM examples: `results/gradcam/README.md`.
 
@@ -104,6 +105,10 @@ Grad-CAM examples: `results/gradcam/README.md`.
 Baseline confusion matrix:
 
 ![Baseline confusion matrix](results/confusion_matrix_baseline.png)
+
+Melanoma detection threshold trade-off (EffNet-B2, one-vs-rest):
+
+![Melanoma threshold curve](results/mel_threshold_curve_effnetb2.png)
 
 Example Grad-CAM overlay:
 
