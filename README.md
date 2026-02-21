@@ -26,6 +26,12 @@ data/ham10000/
   ham10000_images_part_2/
 ```
 
+### Dataset overview (visual)
+
+This figure is included for report/presentation use (class imbalance + sample thumbnails):
+
+![HAM10000 dataset overview](results/dataset/overview.png)
+
 ## Setup
 1) Create an environment (conda/venv) and install dependencies:
 ```

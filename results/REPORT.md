@@ -64,12 +64,31 @@ Why it matters:
 ## Visualizations count (tracked)
 
 Currently tracked visualizations under `results/`:
-- Total images: **26** (`.png`)
+- Total images: **31** (`.png`)
 - Grad-CAM overlays: **5** (`results/gradcam/*.png`)
 
 Full figure meanings and conclusions are indexed in:
 - `FIGURES.md`
 - `gradcam/FIGURES.md`
+
+## Dataset visualizations (for report/presentation)
+
+I added dataset-level plots and qualitative sample thumbnails for presentation use:
+- Dataset overview (recommended for README): `dataset/overview.png`
+- Class distribution: `dataset/class_distribution.png`
+- Metadata overview (age/sex/localization): `dataset/metadata_stats.png`
+- Sample thumbnails (2 per class): `dataset/samples_grid.png`
+
+Notes:
+- HAM10000 is strongly imbalanced (dominant `nv`), which is why macro-F1 and melanoma-oriented metrics are necessary.
+- Sample thumbnails are included as low-resolution examples for qualitative inspection and follow the dataset’s license/attribution (see dataset links in the repository `README.md`).
+
+## Streamlit demo screenshot
+
+To support the “webapp/demo” deliverable, I captured a demo screenshot:
+- `streamlit_demo.png`
+
+This screenshot is generated in a local “demo mode” (so it can run without a manual upload during capture), but the app still supports normal user uploads during real use.
 
 ## What to show in the final deliverable
 
@@ -82,4 +101,5 @@ The recommended “presentation bundle” is:
 - `confusion_matrix_effnetb2_260_acc.png`
 - `mel_threshold_curve_effnetb2.png` (or `*_260_acc.png`)
 - one representative Grad-CAM overlay + its note entry
-
+- `dataset/overview.png`
+- `streamlit_demo.png`

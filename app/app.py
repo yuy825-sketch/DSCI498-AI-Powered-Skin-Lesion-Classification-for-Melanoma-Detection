@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from io import BytesIO
+import os
 from pathlib import Path
 
 import numpy as np
@@ -36,16 +37,34 @@ def main() -> None:
     st.title("Skin Lesion Classification (HAM10000) — Demo")
     st.caption("Educational demo only. Not medical advice.")
 
-    run_dir = st.text_input("Run directory (must contain best.pt + classes.json)", value="runs/<your_run_dir>")
-    image_size = st.number_input("Model image size", min_value=64, max_value=512, value=224, step=16)
+    default_run_dir = os.getenv("DSCI498_DEMO_RUN_DIR", "runs/<your_run_dir>")
+    default_image_size = int(os.getenv("DSCI498_DEMO_IMAGE_SIZE", "224"))
+
+    run_dir = st.text_input("Run directory (must contain best.pt + classes.json)", value=default_run_dir)
+    image_size = st.number_input("Model image size", min_value=64, max_value=512, value=default_image_size, step=16)
     topk = st.slider("Top-k predictions", min_value=1, max_value=7, value=3)
 
+    # Optional auto-demo mode for screenshots / quick verification
+    demo_flag = os.getenv("DSCI498_DEMO_AUTO", "0") == "1"
+    try:
+        demo_flag = demo_flag or str(st.query_params.get("demo", "0")) == "1"
+    except Exception:
+        pass
+
     uploaded = st.file_uploader("Upload an image (JPG/PNG)", type=["jpg", "jpeg", "png"])
-    if not uploaded:
+    if uploaded:
+        image = Image.open(BytesIO(uploaded.read())).convert("RGB")
+    elif demo_flag:
+        demo_path = Path("assets/demo_input.png")
+        if not demo_path.exists():
+            st.error(f"Demo image not found: {demo_path}")
+            return
+        image = Image.open(demo_path).convert("RGB")
+        st.info("Demo mode: using `assets/demo_input.png` (append `?demo=1` to enable).")
+    else:
         st.info("Upload an image to see predictions and Grad-CAM.")
         return
 
-    image = Image.open(BytesIO(uploaded.read())).convert("RGB")
     st.image(image, caption="Input image", use_container_width=True)
 
     try:
@@ -80,4 +99,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

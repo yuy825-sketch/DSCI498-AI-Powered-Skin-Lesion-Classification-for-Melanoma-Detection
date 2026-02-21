@@ -57,6 +57,33 @@ Each `summary_*.md` (and `summary.md` as a “latest export”) records:
 
 See `gradcam/README.md` and `gradcam/FIGURES.md` for the Grad-CAM gallery and per-image notes.
 
+## Dataset visualizations
+
+### `dataset/overview.png`
+- **What**: A compact dataset overview figure: class distribution (top) + one sample thumbnail per class (bottom).
+- **How generated**: `python scripts/dataset_viz.py --root data/ham10000 --out-dir results/dataset --seed 42`
+- **Conclusion**: HAM10000 is heavily imbalanced (dominant `nv`), so accuracy alone can be misleading; I report macro-F1 and melanoma-focused metrics.
+- **Attribution**: Sample thumbnails are from HAM10000 (see dataset links in `README.md`) and follow the dataset license.
+
+### `dataset/class_distribution.png`
+- **What**: Bar chart of `dx` class counts with percentages.
+- **Conclusion**: Confirms severe class imbalance (especially `nv` vs minority classes), motivating imbalance handling and melanoma-sensitivity analysis.
+
+### `dataset/metadata_stats.png`
+- **What**: 3-panel overview of metadata: age histogram, sex distribution, and top-10 localizations.
+- **Conclusion**: Shows non-image covariate distributions that can contribute to dataset bias; results should be interpreted as dataset-specific.
+
+### `dataset/samples_grid.png`
+- **What**: Random sample thumbnails (2 per class) for qualitative inspection.
+- **Conclusion**: Lesion appearances overlap visually across classes, explaining common confusions and the need for threshold-based sensitivity tuning.
+
+## Demo app screenshot
+
+### `streamlit_demo.png`
+- **What**: Screenshot of the Streamlit demo page showing predictions + Grad-CAM (demo mode).
+- **How generated**: `bash scripts/capture_streamlit_screenshot.sh` (requires a local run dir; see `app/app.py` demo env vars).
+- **Conclusion**: Demonstrates a working “upload → predict → Grad-CAM” pipeline suitable for course deliverables.
+
 ## Training dynamics
 
 ### `training_curves_effnetb2.png`
