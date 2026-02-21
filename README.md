@@ -12,11 +12,11 @@ This repository contains an end-to-end deep learning project for **skin lesion i
 This is a course project for educational purposes only. It is **not** medical advice and should not be used for clinical decision-making.
 
 ## Dataset
-We use **HAM10000** (Human Against Machine with 10000 training images), a dermatoscopic image dataset with 7 diagnostic categories.
+I use **HAM10000** (Human Against Machine with 10000 training images), a dermatoscopic image dataset with 7 diagnostic categories.
 
 Recommended sources:
-- Harvard Dataverse (DOI): `doi:10.7910/DVN/DBW86T`
-- Kaggle mirror: `skin-cancer-mnist-ham10000`
+- Harvard Dataverse (DOI): `doi:10.7910/DVN/DBW86T` (link: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T)
+- Kaggle mirror: https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000
 
 Expected local layout (not committed):
 ```
@@ -38,7 +38,12 @@ pip install -e .
 python -m dsci498_skin.smoke
 ```
 
-## Train / Evaluate (planned)
+Note: On this machine, PyTorch may require:
+```
+export LD_PRELOAD=$CONDA_PREFIX/lib/libittnotify.so
+```
+
+## Train / Evaluate
 The training scripts will save:
 - checkpoints locally (not committed)
 - run metadata + metrics under `runs/` (not committed)
@@ -50,8 +55,8 @@ python train.py --config configs/baseline.json --run-name baseline-effnetb0
 python scripts/export_latest.py
 ```
 
-## Generative augmentation (VAE) (planned)
-We include a simple **conditional VAE (cVAE)** that can generate class-conditioned synthetic samples.
+## Generative augmentation (VAE)
+I include a simple **conditional VAE (cVAE)** that can generate class-conditioned synthetic samples.
 
 Workflow (high level):
 ```
@@ -60,7 +65,7 @@ python scripts/generate_synthetic.py --run-dir runs/<cvae_run_dir> --out-root ar
 python train.py --config configs/baseline_with_synth.json --run-name baseline+synthetic
 ```
 
-## Demo app (planned)
+## Demo app (Streamlit)
 The Streamlit app supports:
 - uploading an image
 - showing top-k predictions
@@ -71,8 +76,8 @@ Run it:
 streamlit run app/app.py
 ```
 
-## Results (to be filled)
-We report:
+## Results
+I report:
 - accuracy, macro-F1
 - per-class recall
 - melanoma sensitivity (recall for `mel`)
@@ -90,9 +95,24 @@ We report:
 Grad-CAM examples: `results/gradcam/README.md`.
 
 ### Conclusions (current)
-- The dataset is highly imbalanced, so **overall accuracy can be misleading**; we prioritize **melanoma sensitivity** and macro-F1.
-- In our quick ablations, the **baseline class-weighted cross-entropy** achieved the best melanoma sensitivity among the tested settings.
+- The dataset is highly imbalanced, so **overall accuracy can be misleading**; I prioritize **melanoma sensitivity** and macro-F1.
+- In my quick ablations, the **baseline class-weighted cross-entropy** achieved the best melanoma sensitivity among the tested settings.
 - Weighted sampling improved overall accuracy but did not improve melanoma sensitivity in this run; this suggests further tuning is needed (loss, augmentations, schedules, and/or alternative backbones).
+
+### Representative visualizations
+
+Baseline confusion matrix:
+
+![Baseline confusion matrix](results/confusion_matrix_baseline.png)
+
+Example Grad-CAM overlay:
+
+![Grad-CAM overlay example](results/gradcam/ISIC_0025964_overlay.png)
+
+Full results and figure notes:
+- Results folder: `results/README.md`
+- Figure index: `results/FIGURES.md`
+- Grad-CAM notes: `results/gradcam/FIGURES.md`
 
 ### Limitations
 - This is a course project and not a clinically validated system.
