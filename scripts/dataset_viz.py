@@ -138,6 +138,36 @@ def plot_samples_grid(
     plt.close(fig)
 
 
+def plot_samples_strip(
+    df: pd.DataFrame,
+    root: Path,
+    out_png: Path,
+    *,
+    seed: int,
+    thumb_size: int = 140,
+) -> None:
+    rng = np.random.default_rng(int(seed))
+    classes = sorted(df["dx"].unique().tolist())
+
+    fig, axes = plt.subplots(1, len(classes), figsize=(2.1 * len(classes), 2.6))
+    if len(classes) == 1:
+        axes = np.asarray([axes])
+
+    for ax, c in zip(axes, classes, strict=True):
+        ax.axis("off")
+        subset = df[df["dx"] == c]["image_id"].tolist()
+        image_id = str(rng.choice(subset, size=1, replace=False).tolist()[0])
+        img_path = _find_image(root, image_id)
+        img = Image.open(img_path).convert("RGB").resize((thumb_size, thumb_size))
+        ax.imshow(img)
+        ax.set_title(c, fontsize=10, pad=4)
+
+    fig.suptitle("HAM10000 sample strip (one random example per class)", y=1.02, fontsize=12)
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_png, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("data/ham10000"))
@@ -166,10 +196,12 @@ def main() -> int:
         per_class=int(args.per_class),
         seed=int(args.seed),
     )
+    plot_samples_strip(df, args.root, args.out_dir / "samples_strip.png", seed=int(args.seed))
 
     print("Wrote:", args.out_dir / "class_distribution.png")
     print("Wrote:", args.out_dir / "metadata_stats.png")
     print("Wrote:", args.out_dir / "samples_grid.png")
+    print("Wrote:", args.out_dir / "samples_strip.png")
     return 0
 
 

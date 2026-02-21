@@ -36,7 +36,7 @@ These figures are included for report/presentation use (class imbalance + sample
 
 ![HAM10000 class distribution](results/dataset/class_distribution.png)
 
-![HAM10000 sample thumbnails](results/dataset/samples_grid.png)
+![HAM10000 sample strip](results/dataset/samples_strip.png)
 
 ## Setup
 1) Create an environment (conda/venv) and install dependencies:
@@ -87,6 +87,10 @@ Run it:
 ```
 streamlit run app/app.py
 ```
+
+Screenshot (used in the report):
+
+![Streamlit demo screenshot](results/streamlit_demo.png)
 
 ## Results
 I report:

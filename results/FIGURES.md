@@ -74,6 +74,11 @@ See `gradcam/README.md` and `gradcam/FIGURES.md` for the Grad-CAM gallery and pe
 - **How generated**: `python scripts/dataset_viz.py --root data/ham10000 --out-dir results/dataset --seed 42 --per-class 2`
 - **Conclusion**: Lesion appearances overlap visually across classes, explaining common confusions and the need for threshold-based sensitivity tuning.
 
+### `dataset/samples_strip.png`
+- **What**: One random example per class in a single row (compact “sample examples” figure).
+- **How generated**: `python scripts/dataset_viz.py --root data/ham10000 --out-dir results/dataset --seed 42 --per-class 2`
+- **Conclusion**: A compact qualitative overview suitable for the README (shows class variety without taking excessive vertical space).
+
 ## Demo app screenshot
 
 ### `streamlit_demo.png`

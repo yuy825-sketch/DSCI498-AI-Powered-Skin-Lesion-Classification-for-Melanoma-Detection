@@ -1,99 +1,97 @@
-# Results Report
+# Project Report — AI-Powered Skin Lesion Classification for Melanoma Detection (DSCI 498)
 
-This report summarizes the project setup, key experimental results, and the conclusions supported by the tracked artifacts in `results/`.
+This report is written for course submission. It documents the dataset, methods, experiments, results, analysis, and a runnable demo app.
+
+## Abstract
+
+I built an end-to-end deep learning system to classify dermatoscopic skin lesion images from the **HAM10000** dataset (7 diagnostic categories). The project emphasizes both overall performance under severe class imbalance and **melanoma sensitivity** (recall for `mel`) as a safety-critical metric. I evaluate multiple imbalance-handling strategies, report confusion matrices and per-class recall, add threshold-based melanoma detection analysis using `P(mel)`, and provide qualitative interpretability via Grad-CAM. A Streamlit demo app demonstrates real-time image upload, prediction, and Grad-CAM visualization.
 
 ## Table of contents
 
-- [What “targets” are achieved?](#what-targets-are-achieved)
-- [Dataset and splits](#dataset-and-splits)
-- [Methods](#methods)
-- [Best runs (snapshot)](#best-runs-snapshot)
-- [Experiments and results](#experiments-and-results)
-- [Threshold-based melanoma detection (one-vs-rest)](#threshold-based-melanoma-detection-one-vs-rest)
-- [Qualitative interpretability (Grad-CAM)](#qualitative-interpretability-grad-cam)
-- [Dataset visualizations](#dataset-visualizations-for-reportpresentation)
-- [Demo app](#demo-app)
-- [Limitations and ethical note](#limitations-and-ethical-note)
-- [Reproducibility](#reproducibility)
+- [1. Problem statement](#1-problem-statement)
+- [2. Dataset](#2-dataset)
+- [3. Methods](#3-methods)
+- [4. Experiments](#4-experiments)
+- [5. Results and analysis](#5-results-and-analysis)
+- [6. Interpretability (Grad-CAM)](#6-interpretability-grad-cam)
+- [7. Demo app (Streamlit)](#7-demo-app-streamlit)
+- [8. Limitations and ethical note](#8-limitations-and-ethical-note)
+- [9. Reproducibility](#9-reproducibility)
 
-## What “targets” are achieved?
+## 1. Problem statement
 
-The milestone targets in `info.md` are **not strict KPIs**, but I tried to reach them anyway:
+Skin lesion classification is a high-impact application of computer vision. The key challenge in this dataset is **class imbalance** (a large majority of benign nevi) and visually overlapping lesion appearance. For melanoma detection, false negatives are particularly concerning, so I explicitly track melanoma sensitivity and also analyze threshold-based operating points using the model’s `P(mel)` output.
 
-- **Test accuracy > 0.85**: achieved by the accuracy-focused EfficientNet-B2 @ 260px run.  
-  See `summary_effnetb2_260_acc.md`.
-- **Melanoma sensitivity (recall for `mel`) > 0.85**: achieved by the sensitivity-first run (top-1 recall), and also achievable by **thresholding `P(mel)`** (one-vs-rest) to pick a high-recall operating point.  
-  See `summary_effnetb2_260_mel_sampler.md` and the threshold tables/plots.
 
-Important nuance:
-- These two targets are achieved by **different operating modes** (different runs / settings). A single model that simultaneously has both very high overall accuracy and very high top-1 melanoma recall is harder; that is why I also report the **threshold trade-off** (PR/threshold curves) as a more “medical-style” decision rule.
+## 2. Dataset
 
-## Dataset and splits
+I use HAM10000 (10,015 images, 7 classes). Labels use the `dx` field:
+`akiec`, `bcc`, `bkl`, `df`, `mel`, `nv`, `vasc`.
 
-- Dataset: HAM10000 (7 classes, `dx`) with metadata fields such as `age`, `sex`, and `localization`.
-- Size: 10,015 images.
-- Split strategy: lesion-wise grouped split (by `lesion_id`) into train/val/test with a fixed seed (see `train.py` + each run’s `split.json` under `runs/`, which is local-only).
+### 2.1 Dataset statistics (tracked figures)
 
-Tracked dataset visualizations:
-- Class imbalance: `dataset/class_distribution.png`
-- Metadata overview: `dataset/metadata_stats.png`
-- Sample thumbnails: `dataset/samples_grid.png`
+![HAM10000 class distribution](dataset/class_distribution.png)
 
-## Methods
+*Figure 1. Class distribution of HAM10000 (`dx`). The dataset is highly imbalanced (dominant `nv`), motivating macro-F1 and melanoma-focused evaluation in addition to accuracy.*
 
-### CNN classifier
+![HAM10000 metadata overview](dataset/metadata_stats.png)
 
-I train a CNN image classifier on HAM10000 (7 classes) using EfficientNet backbones. Metrics reported:
-- accuracy
-- macro-F1 (more informative under class imbalance)
-- per-class recall (melanoma sensitivity = recall for `mel`)
+*Figure 2. Metadata overview (age, sex, and top-10 localizations). These covariates can contribute to dataset bias and should be considered when interpreting results.*
 
-### Handling class imbalance
+### 2.2 Sample examples
 
-I explore multiple strategies:
-- class-weighted cross entropy (baseline)
-- weighted sampling
-- melanoma-weighted loss (explicitly prioritizing `mel`)
+![HAM10000 sample strip](dataset/samples_strip.png)
 
-### Melanoma thresholding (one-vs-rest)
+*Figure 3. One random example per class (qualitative). Visual overlap across classes explains why misclassifications occur and why thresholding can be useful for sensitivity-first operation.*
 
-In addition to top-1 multiclass predictions, I treat `P(mel)` as a melanoma detection score and sweep thresholds to select an operating point (e.g., to enforce recall ≥ 0.85).
+Split strategy (implementation detail): I use a lesion-wise grouped split by `lesion_id` into train/val/test with a fixed seed (to reduce leakage from multiple images of the same lesion).
 
-### Interpretability (Grad-CAM)
+## 3. Methods
 
-Grad-CAM overlays are used as qualitative explanations of model attention for selected examples.
+### 3.1 CNN classifier
 
-### Optional generative augmentation (cVAE)
+I train a CNN image classifier using EfficientNet backbones with ImageNet-style normalization. The model outputs 7-class logits, and probabilities are obtained via softmax.
 
-I include a conditional VAE to generate synthetic samples for an augmentation ablation. The tracked qualitative grid is `vae_samples_grid.png`.
+### 3.2 Handling class imbalance
 
-## Best runs (snapshot)
+I evaluate multiple imbalance-handling strategies:
+- **Class-weighted cross-entropy** (baseline)
+- **Weighted sampling** (to rebalance minibatches)
+- **Melanoma-weighted loss** (explicitly prioritizing `mel` recall)
 
-### Accuracy-focused (best overall accuracy)
+### 3.3 Threshold-based melanoma detection (one-vs-rest)
 
-- Config: `configs/effnetb2_260_acc_select.json`
-- Summary: `summary_effnetb2_260_acc.md`
-- Confusion matrix: `confusion_matrix_effnetb2_260_acc.png`
-- Key metrics (test):
-  - Accuracy: **0.8614**
-  - Macro-F1: **0.7386**
-  - Melanoma recall (top-1): **0.5403**
-- Takeaway: This run best matches the “>85% accuracy” style target, but its top-1 melanoma sensitivity is not high. If melanoma sensitivity is the priority, use a threshold on `P(mel)` (see below) or a sensitivity-first training setup.
+Beyond top-1 multiclass prediction, I treat `P(mel)` as a melanoma detection score and sweep thresholds to obtain precision/recall trade-offs and a suggested operating point (e.g., recall ≥ 0.85).
 
-### Sensitivity-first (best melanoma recall under top-1)
+### 3.4 Interpretability (Grad-CAM)
 
-- Config: `configs/effnetb2_260_mel_sampler_select.json`
-- Summary: `summary_effnetb2_260_mel_sampler.md`
-- Confusion matrix: `confusion_matrix_effnetb2_260_mel_sampler.png`
-- Key metrics (test):
-  - Accuracy: **0.5374**
-  - Macro-F1: **0.5666**
-  - Melanoma recall (top-1): **0.8548**
-- Takeaway: This run reaches the “>85% melanoma sensitivity” target under top-1 classification, but at a heavy cost: many non-melanoma samples are pushed toward melanoma (low precision and low overall accuracy). This is useful as a demonstration of a sensitivity-first bias, not as a balanced classifier.
+Grad-CAM provides qualitative heatmaps showing image regions most influencing the predicted class.
 
-## Experiments and results
+### 3.5 Optional generative augmentation (cVAE)
 
-This table is a compact index of the main tracked runs and where to find their artifacts (all values are from the corresponding `results/summary_*.md` files).
+I also include a conditional VAE to generate synthetic samples for an augmentation ablation (tracked in `vae_samples_grid.png`).
+
+## 4. Experiments
+
+I report:
+- test accuracy
+- test macro-F1
+- test per-class recall (including melanoma sensitivity = recall for `mel`)
+
+All tracked experiment outputs (tables/plots) are committed under `results/`. The full run directories (including checkpoints) are kept locally under `runs/`.
+
+## 5. Results and analysis
+
+### 5.1 “Hard targets” (milestone-style goals)
+
+The milestone targets in `info.md` are not strict KPIs, but I tried to reach them:
+
+- **Test accuracy > 0.85**: achieved by the accuracy-focused EfficientNet-B2 @ 260px run (`summary_effnetb2_260_acc.md`).
+- **Melanoma sensitivity (recall for `mel`) > 0.85**: achieved by the sensitivity-first run under top-1 classification (`summary_effnetb2_260_mel_sampler.md`), and also achievable via thresholding `P(mel)` depending on the operating point.
+
+Important nuance: these targets are achieved by **different operating modes** (different runs / settings). I therefore present both a high-accuracy classifier and a sensitivity-first operating mode via threshold analysis.
+
+### 5.2 Summary table (key tracked runs)
 
 | Run | Test acc | Test macro-F1 | Mel recall | Key artifacts |
 |---|---:|---:|---:|---|
@@ -102,102 +100,74 @@ This table is a compact index of the main tracked runs and where to find their a
 | Accuracy-focused (EffNet-B2@260, acc-selected ckpt) | **0.8614** | **0.7386** | 0.5403 | `summary_effnetb2_260_acc.md`, `confusion_matrix_effnetb2_260_acc.png`, `mel_threshold_effnetb2_260_acc.md` |
 | Sensitivity-first (EffNet-B2@260 + sampler + mel-weight) | 0.5374 | 0.5666 | **0.8548** | `summary_effnetb2_260_mel_sampler.md`, `confusion_matrix_effnetb2_260_mel_sampler.png`, `mel_threshold_effnetb2_260_mel_sampler.md` |
 
-Interpretation:
-- “Accuracy-focused” provides the best overall classifier by accuracy and macro-F1 among the tracked runs.
-- “Sensitivity-first” demonstrates melanoma recall > 0.85 under top-1 classification, at a large cost to overall accuracy and expected precision.
-- Threshold analysis provides a clean way to pick a sensitivity-first operating point without forcing the whole multiclass classifier to behave like “always melanoma”.
+### 5.3 Accuracy-focused model (best overall accuracy)
 
-## Threshold-based melanoma detection (one-vs-rest)
+![Confusion matrix (accuracy-focused)](confusion_matrix_effnetb2_260_acc.png)
 
-Instead of using the model’s top-1 class as the decision rule, I also treat `P(mel)` as a **detection score** and sweep thresholds.
+*Figure 4. Confusion matrix for the accuracy-focused EfficientNet-B2@260 run. Accuracy is strong due to the dominant `nv` class, while minority classes (especially `mel`) remain challenging.*
 
-Key artifacts:
-- PR curves: `mel_pr_curve_effnetb2.png`, `mel_pr_curve_effnetb2_260_acc.png`, `mel_pr_curve_effnetb2_260_mel_sampler.png`
-- Threshold sweep tables: `mel_threshold_effnetb2.md`, `mel_threshold_effnetb2_260_acc.md`, `mel_threshold_effnetb2_260_mel_sampler.md`
-- Threshold trade-off plots: `mel_threshold_curve_effnetb2.png`, `mel_threshold_curve_effnetb2_260_acc.png`, `mel_threshold_curve_effnetb2_260_mel_sampler.png`
+Key observations from Figure 4:
+- The model is very strong on the majority class `nv`, which boosts overall accuracy.
+- Many melanoma (`mel`) samples are confused with visually similar pigmented lesion classes (e.g., `nv`, `bkl`), which reduces top-1 melanoma recall in this operating mode.
 
-How to interpret:
-- Lower threshold ⇒ higher melanoma recall (sensitivity) but lower precision (more false positives).
-- This provides a clear “operating point” narrative for presentation/poster: *choose sensitivity first, accept precision cost*.
+![Training curves (accuracy-focused)](training_curves_effnetb2_260_acc.png)
 
-## Qualitative interpretability (Grad-CAM)
+*Figure 5. Training dynamics for the accuracy-focused run. The curves show validation metrics across epochs and support checkpoint selection by validation accuracy.*
 
-Grad-CAM overlays and per-image notes:
-- Images: `results/gradcam/*.png`
-- Per-image truth/pred/probability and conclusion: `results/gradcam/FIGURES.md`
+Analysis: This run achieves **>0.85 test accuracy** and the best macro-F1 among the tracked experiments, which makes it a good “general classifier” baseline for the submission. However, accuracy alone is not sufficient to assess safety for melanoma detection.
 
-Why it matters:
-- It shows typical “attention” behavior for correct vs incorrect predictions.
-- It also provides evidence for the main claim: high confidence does not guarantee correctness, and missed melanoma errors are the most critical to analyze.
+### 5.4 Melanoma sensitivity vs precision (threshold analysis)
 
-## Visualizations count (tracked)
+Using `P(mel)` as a one-vs-rest detection score yields a sensitivity/precision trade-off:
 
-Currently tracked visualizations under `results/`:
-- Total images: **30** (`.png`)
-- Grad-CAM overlays: **5** (`results/gradcam/*.png`)
+![Melanoma threshold trade-off](mel_threshold_curve_effnetb2.png)
 
-Full figure meanings and conclusions are indexed in:
-- `FIGURES.md`
-- `gradcam/FIGURES.md`
+*Figure 6. Precision/recall vs threshold for melanoma detection (EffNet-B2). Lower thresholds increase sensitivity but reduce precision (more false positives).*
 
-## Dataset visualizations (for report/presentation)
+This analysis supports a “medical-style” narrative: select an operating point by a sensitivity requirement instead of relying only on top-1 multiclass predictions.
 
-I added dataset-level plots and qualitative sample thumbnails for presentation use:
-- Class distribution: `dataset/class_distribution.png`
-- Metadata overview (age/sex/localization): `dataset/metadata_stats.png`
-- Sample thumbnails (2 per class): `dataset/samples_grid.png`
+To make this concrete, the threshold sweep tables (e.g., `mel_threshold_effnetb2.md`, `mel_threshold_effnetb2_260_acc.md`) record operating points such as “recall ≥ 0.85” and the associated precision cost. This is the most interpretable way to present the trade-off in a course setting.
 
-Notes:
-- HAM10000 is strongly imbalanced (dominant `nv`), which is why macro-F1 and melanoma-oriented metrics are necessary.
-- Sample thumbnails are included as low-resolution examples for qualitative inspection and follow the dataset’s license/attribution (see dataset links in the repository `README.md`).
-- These figures were generated by `python scripts/dataset_viz.py` (see `results/FIGURES.md` for exact commands).
+### 5.5 Sensitivity-first training (high melanoma recall under top-1)
 
-## Demo app
+![Confusion matrix (sensitivity-first)](confusion_matrix_effnetb2_260_mel_sampler.png)
 
-The Streamlit demo app is implemented in `app/app.py` and supports:
-- image upload
-- top-k prediction display
-- Grad-CAM overlay visualization
+*Figure 7. Confusion matrix for the sensitivity-first run (EffNet-B2@260 with sampler + melanoma-weighted loss). Melanoma recall exceeds 0.85 under top-1, but many non-melanoma samples are pulled toward `mel`, which hurts overall accuracy.*
 
-Tracked demo screenshot:
-- `streamlit_demo.png`
+Analysis: This run demonstrates that explicitly optimizing for melanoma sensitivity can meet a sensitivity target, but it can create an impractical classifier if not paired with a thresholding policy or additional calibration. The main value of this experiment is to illustrate the sensitivity/precision trade-off and why a single metric is not sufficient.
 
-This screenshot is generated in a local “demo mode” (so it can run without a manual upload during capture), but the app still supports normal user uploads during real use.
+## 6. Interpretability (Grad-CAM)
 
-If you want to reproduce the screenshot locally, a helper script is provided:
-- `bash scripts/capture_streamlit_screenshot.sh`
+Grad-CAM overlays provide qualitative explanations for individual predictions:
 
-## Limitations and ethical note
+![Grad-CAM example](gradcam/ISIC_0025964_overlay.png)
+
+*Figure 8. Example Grad-CAM overlay. For per-image truth/prediction/probabilities and conclusions, see `gradcam/FIGURES.md`.*
+
+Analysis note: Grad-CAM is qualitative. It is most useful for sanity-checking whether the model focuses on the lesion region and for illustrating failure modes (e.g., missed melanoma despite seemingly lesion-focused attention).
+
+## 7. Demo app (Streamlit)
+
+The Streamlit demo app provides an interactive submission deliverable:
+- Upload an image
+- View top-k predictions
+- View a Grad-CAM overlay
+
+![Streamlit demo screenshot](streamlit_demo.png)
+
+*Figure 9. Streamlit demo screenshot (upload → predict → Grad-CAM). This supports a live demo during grading/presentation.*
+
+## 8. Limitations and ethical note
 
 - This is a course project and is **not** clinically validated.
-- Metrics are reported on a single dataset split; generalization across populations/devices is not guaranteed.
-- In a medical context, false negatives for melanoma are safety-critical; this is why I present threshold-based sensitivity trade-offs instead of only reporting overall accuracy.
+- Results are reported on a fixed split of HAM10000; generalization to other populations, acquisition devices, and clinical settings is not guaranteed.
+- In medical applications, decision thresholds should be selected with domain constraints, cost-sensitive evaluation, and external validation.
 
-## Reproducibility
+## 9. Reproducibility
 
-Large artifacts are intentionally not committed:
-- `data/` (dataset)
-- `runs/` (full run directories, checkpoints, per-epoch history)
+This repository tracks:
+- configs: `../configs/*.json`
+- submission-ready outputs: `results/` (summaries, plots, Grad-CAM examples, and this report)
 
-What is committed for reproducibility and grading:
-- configs: `configs/*.json`
-- tracked outputs: `results/` (summaries, plots, Grad-CAM examples, and this report)
-
-To reproduce a run locally, use a config from `configs/` and run:
+Large artifacts are intentionally not committed (dataset and full run directories). When the dataset is present locally, runs can be reproduced via:
 - `python train.py --config <config> --run-name <name>`
-- then export tracked figures/tables via scripts in `scripts/` (see `results/FIGURES.md`).
-
-## What to show in the final deliverable
-
-For a course demo/report, the most defensible story is:
-- Show the **high-accuracy model** as the “balanced baseline for general classification”
-- Then show **melanoma threshold tuning** as the “sensitivity-first operating mode”
-- Use Grad-CAM as qualitative interpretability evidence
-
-The recommended “presentation bundle” is:
-- `confusion_matrix_effnetb2_260_acc.png`
-- `mel_threshold_curve_effnetb2.png` (or `*_260_acc.png`)
-- one representative Grad-CAM overlay + its note entry
-- `dataset/class_distribution.png`
-- `dataset/samples_grid.png`
-- `streamlit_demo.png`
