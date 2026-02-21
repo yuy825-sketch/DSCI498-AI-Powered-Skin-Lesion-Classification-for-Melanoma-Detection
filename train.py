@@ -24,9 +24,11 @@ def _load_config(path: Path) -> dict:
 
 
 def _make_transforms(image_size: int) -> tuple[transforms.Compose, transforms.Compose]:
+    # Defaults are conservative to avoid hurting baseline performance. Enable stronger
+    # cropping via config if desired.
     train_tf = transforms.Compose(
         [
-            transforms.RandomResizedCrop(size=image_size, scale=(0.7, 1.0)),
+            transforms.Resize((image_size, image_size)),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomVerticalFlip(p=0.5),
             transforms.RandomRotation(degrees=25),
@@ -38,7 +40,41 @@ def _make_transforms(image_size: int) -> tuple[transforms.Compose, transforms.Co
     eval_tf = transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
-            transforms.CenterCrop(size=image_size),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+    return train_tf, eval_tf
+
+
+def _make_transforms_from_cfg(cfg: dict) -> tuple[transforms.Compose, transforms.Compose]:
+    image_size = int(cfg["dataset"]["image_size"])
+    use_rrc = bool(cfg["train"].get("use_random_resized_crop", False))
+    rrc_scale = cfg["train"].get("rrc_scale", [0.7, 1.0])
+    if isinstance(rrc_scale, list) and len(rrc_scale) == 2:
+        rrc_scale = (float(rrc_scale[0]), float(rrc_scale[1]))
+    else:
+        rrc_scale = (0.7, 1.0)
+
+    if use_rrc:
+        train_resize = transforms.RandomResizedCrop(size=image_size, scale=rrc_scale)
+    else:
+        train_resize = transforms.Resize((image_size, image_size))
+
+    train_tf = transforms.Compose(
+        [
+            train_resize,
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomVerticalFlip(p=0.5),
+            transforms.RandomRotation(degrees=25),
+            transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
+    eval_tf = transforms.Compose(
+        [
+            transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ]
@@ -73,7 +109,7 @@ def main() -> int:
         seed=int(cfg["dataset"]["split_seed"]),
     )
 
-    train_tf, eval_tf = _make_transforms(image_size)
+    train_tf, eval_tf = _make_transforms_from_cfg(cfg)
     train_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=train_tf), split.train_idx)
     val_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=eval_tf), split.val_idx)
     test_ds = Subset(Ham10000Dataset(samples=samples, class_to_idx=class_to_idx, transform=eval_tf), split.test_idx)
@@ -159,6 +195,8 @@ def main() -> int:
         lr=float(cfg["train"]["lr"]),
         weight_decay=float(cfg["train"]["weight_decay"]),
     )
+    use_amp = bool(cfg["train"].get("use_amp", True))
+    scaler = torch.cuda.amp.GradScaler(enabled=(use_amp and device.type == "cuda"))
 
     repo_root = Path(__file__).resolve().parent
     if args.outdir is None:
@@ -210,10 +248,12 @@ def main() -> int:
             x = x.to(device)
             y = y.to(device)
             optimizer.zero_grad(set_to_none=True)
-            logits = model(x)
-            loss = criterion(logits, y)
-            loss.backward()
-            optimizer.step()
+            with torch.cuda.amp.autocast(enabled=(use_amp and device.type == "cuda")):
+                logits = model(x)
+                loss = criterion(logits, y)
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             total_loss += float(loss.item()) * int(x.shape[0])
             n += int(x.shape[0])
 
@@ -231,6 +271,7 @@ def main() -> int:
                 "selected_metric": float(metric_value),
             }
         )
+        save_json(outdir / "history.json", {"select_metric": select_metric, "history": history})
         print(
             f"epoch={epoch:03d} loss={avg_loss:.4f} "
             f"val_acc={val_metrics.accuracy:.4f} val_macro_f1={val_metrics.macro_f1:.4f}"
