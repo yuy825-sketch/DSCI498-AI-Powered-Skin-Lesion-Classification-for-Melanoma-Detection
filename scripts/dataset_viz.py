@@ -138,65 +138,6 @@ def plot_samples_grid(
     plt.close(fig)
 
 
-def plot_overview_composite(
-    df: pd.DataFrame,
-    root: Path,
-    out_png: Path,
-    *,
-    seed: int,
-    thumb_size: int = 150,
-) -> None:
-    rng = np.random.default_rng(int(seed))
-    counts = df["dx"].value_counts().sort_values(ascending=False)
-    labels = counts.index.tolist()
-    values = counts.values.astype(int)
-    total = int(values.sum())
-    perc = values / max(1, total) * 100.0
-
-    classes = sorted(df["dx"].unique().tolist())
-    chosen_per_class: dict[str, str] = {}
-    for c in classes:
-        subset = df[df["dx"] == c]["image_id"].tolist()
-        chosen_per_class[c] = str(rng.choice(subset, size=1, replace=False).tolist()[0])
-
-    fig = plt.figure(figsize=(10.5, 11.5))
-    gs = fig.add_gridspec(2, 1, height_ratios=[1.05, 2.2], hspace=0.25)
-
-    # Top: class distribution
-    ax = fig.add_subplot(gs[0])
-    colors = ["tab:red" if c == "mel" else "tab:blue" for c in labels]
-    bars = ax.bar(labels, values, color=colors, alpha=0.9)
-    ax.set_title("Dataset overview: class distribution + one example per class")
-    ax.set_xlabel("Class (dx)")
-    ax.set_ylabel("Count")
-    ax.grid(True, axis="y", alpha=0.25)
-    for bar, p in zip(bars, perc, strict=True):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            bar.get_height(),
-            f"{p:.1f}%",
-            ha="center",
-            va="bottom",
-            fontsize=9,
-        )
-
-    # Bottom: samples (1 per class, 7 columns)
-    sub = gs[1].subgridspec(1, len(classes), wspace=0.02)
-    for idx, c in enumerate(classes):
-        ax = fig.add_subplot(sub[0, idx])
-        ax.axis("off")
-        image_id = chosen_per_class[c]
-        img_path = _find_image(root, image_id)
-        img = Image.open(img_path).convert("RGB").resize((thumb_size, thumb_size))
-        ax.imshow(img)
-        ax.set_title(c, fontsize=10, pad=4)
-        ax.text(0.5, -0.08, image_id, ha="center", va="top", transform=ax.transAxes, fontsize=7)
-
-    out_png.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_png, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("data/ham10000"))
@@ -225,15 +166,12 @@ def main() -> int:
         per_class=int(args.per_class),
         seed=int(args.seed),
     )
-    plot_overview_composite(df, args.root, args.out_dir / "overview.png", seed=int(args.seed))
 
     print("Wrote:", args.out_dir / "class_distribution.png")
     print("Wrote:", args.out_dir / "metadata_stats.png")
     print("Wrote:", args.out_dir / "samples_grid.png")
-    print("Wrote:", args.out_dir / "overview.png")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

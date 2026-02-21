@@ -33,16 +33,36 @@ def _load_model(run_dir: str):
 
 
 def main() -> None:
-    st.set_page_config(page_title="DSCI498 Skin Lesion Classifier", layout="wide")
-    st.title("Skin Lesion Classification (HAM10000) — Demo")
-    st.caption("Educational demo only. Not medical advice.")
+    st.set_page_config(page_title="DSCI498 Skin Lesion Classifier", page_icon="🔬", layout="wide")
+
+    st.markdown(
+        """
+        <style>
+          .block-container { padding-top: 1.2rem; padding-bottom: 2rem; }
+          .small-note { font-size: 0.92rem; color: rgba(49, 51, 63, 0.75); }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.title("Skin Lesion Classification (HAM10000)")
+    st.markdown(
+        "<div class='small-note'>Course demo only (educational). Not medical advice.</div>",
+        unsafe_allow_html=True,
+    )
 
     default_run_dir = os.getenv("DSCI498_DEMO_RUN_DIR", "runs/<your_run_dir>")
     default_image_size = int(os.getenv("DSCI498_DEMO_IMAGE_SIZE", "224"))
 
-    run_dir = st.text_input("Run directory (must contain best.pt + classes.json)", value=default_run_dir)
-    image_size = st.number_input("Model image size", min_value=64, max_value=512, value=default_image_size, step=16)
-    topk = st.slider("Top-k predictions", min_value=1, max_value=7, value=3)
+    with st.sidebar:
+        st.header("Settings")
+        st.caption("The run directory must contain `best.pt` and `classes.json`.")
+
+        run_dir = st.text_input("Run directory", value=default_run_dir)
+        image_size = st.number_input("Image size", min_value=64, max_value=512, value=default_image_size, step=16)
+        topk = st.slider("Top-k", min_value=1, max_value=7, value=3)
+        alpha = st.slider("Grad-CAM overlay alpha", min_value=0.0, max_value=0.9, value=0.45, step=0.05)
+        show_heatmap = st.checkbox("Show raw heatmap", value=False)
 
     # Optional auto-demo mode for screenshots / quick verification
     demo_flag = os.getenv("DSCI498_DEMO_AUTO", "0") == "1"
@@ -51,7 +71,8 @@ def main() -> None:
     except Exception:
         pass
 
-    uploaded = st.file_uploader("Upload an image (JPG/PNG)", type=["jpg", "jpeg", "png"])
+    st.subheader("1) Upload an image")
+    uploaded = st.file_uploader("Image file (JPG/PNG)", type=["jpg", "jpeg", "png"])
     if uploaded:
         image = Image.open(BytesIO(uploaded.read())).convert("RGB")
     elif demo_flag:
@@ -65,7 +86,12 @@ def main() -> None:
         st.info("Upload an image to see predictions and Grad-CAM.")
         return
 
-    st.image(image, caption="Input image", use_container_width=True)
+    col_img, col_info = st.columns([1.2, 1.0], gap="large")
+    with col_img:
+        st.image(image, caption="Input image", use_container_width=True)
+    with col_info:
+        st.subheader("2) Load model")
+        st.code(run_dir, language="text")
 
     try:
         loaded, device = _load_model(run_dir)
@@ -83,18 +109,28 @@ def main() -> None:
         k=int(topk),
     )
 
-    st.subheader("Predictions")
+    st.subheader("3) Predictions")
+    labels = [p[0] for p in preds]
+    probs = [p[1] for p in preds]
+    st.bar_chart({"probability": probs}, x=labels, y="probability", height=240)
     for label, prob in preds:
         st.write(f"- `{label}`: **{prob:.4f}**")
 
-    st.subheader("Grad-CAM")
+    st.subheader("4) Interpretability (Grad-CAM)")
     with st.spinner("Computing Grad-CAM..."):
         x = transform(image).unsqueeze(0).to(device)
         target_layer = infer_target_layer(loaded.model)
         cam_res = gradcam(model=loaded.model, target_layer=target_layer, x=x, class_idx=None)
 
-        overlay = _overlay(np.array(image), cam_res.heatmap, alpha=0.45)
-        st.image(overlay, caption="Grad-CAM overlay", use_container_width=True)
+        overlay = _overlay(np.array(image), cam_res.heatmap, alpha=float(alpha))
+
+        col_a, col_b = st.columns([1, 1], gap="large")
+        with col_a:
+            st.image(overlay, caption="Grad-CAM overlay", use_container_width=True)
+        with col_b:
+            if show_heatmap:
+                st.image(cam_res.heatmap, caption="Raw heatmap (0..1)", use_container_width=True)
+            st.caption(f"Predicted class index: {cam_res.class_idx} (score={cam_res.score:.4f})")
 
 
 if __name__ == "__main__":

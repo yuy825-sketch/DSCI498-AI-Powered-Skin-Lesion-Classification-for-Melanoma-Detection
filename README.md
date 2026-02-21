@@ -2,6 +2,10 @@
 
 This repository contains an end-to-end deep learning project for **skin lesion image classification** (HAM10000, 7 classes), with an emphasis on **melanoma sensitivity** (recall) and **model interpretability** (Grad-CAM), plus a simple **Streamlit demo app**.
 
+Quick links:
+- Full report: [`results/REPORT.md`](results/REPORT.md)
+- Results index: [`results/README.md`](results/README.md)
+
 ## Project goals
 - Train a strong CNN classifier on HAM10000
 - Improve performance with augmentation and class-imbalance handling
@@ -28,9 +32,11 @@ data/ham10000/
 
 ### Dataset overview (visual)
 
-This figure is included for report/presentation use (class imbalance + sample thumbnails):
+These figures are included for report/presentation use (class imbalance + sample thumbnails):
 
-![HAM10000 dataset overview](results/dataset/overview.png)
+![HAM10000 class distribution](results/dataset/class_distribution.png)
+
+![HAM10000 sample thumbnails](results/dataset/samples_grid.png)
 
 ## Setup
 1) Create an environment (conda/venv) and install dependencies:
@@ -103,7 +109,7 @@ I report:
 
 Grad-CAM examples: `results/gradcam/README.md`.
 
-### Conclusions (current)
+### Conclusions
 - The dataset is highly imbalanced, so **overall accuracy can be misleading**; I prioritize **melanoma sensitivity** and macro-F1.
 - In my quick ablations, the **baseline class-weighted cross-entropy** achieved the best melanoma sensitivity among the early settings.
 - I can reach **>85% test accuracy** with an EfficientNet-B2 @ 260px model (see `results/summary_effnetb2_260_acc.md`).
