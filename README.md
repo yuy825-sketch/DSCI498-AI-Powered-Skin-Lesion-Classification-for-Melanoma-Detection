@@ -92,19 +92,23 @@ I report:
 | Melanoma-weighted loss (EffNet-B0 + mel multiplier=3, 15 epochs) | `configs/mel_sensitive.json` | 0.7597 | 0.6285 | 0.7419 | `results/summary_melweight3.md`, `results/confusion_matrix_melweight3.png` |
 | cVAE synthetic augmentation (EffNet-B0 + extra synthetic images, 10 epochs) | `configs/baseline_with_synth.json` | 0.7926 | 0.6979 | 0.6694 | `results/summary_synth.md`, `results/confusion_matrix_synth.png`, `results/vae_samples_grid.png` |
 | Tuned backbone (EffNet-B2, checkpoint selected by val melanoma recall) | `configs/effnetb2_mel_select.json` | 0.7697 | 0.6958 | 0.7823 | `results/summary_effnetb2.md`, `results/confusion_matrix_effnetb2.png`, `results/training_curves_effnetb2.png`, `results/mel_pr_curve_effnetb2.png`, `results/mel_threshold_effnetb2.md`, `results/mel_threshold_curve_effnetb2.png` |
+| Accuracy-focused (EffNet-B2 @ 260px, checkpoint selected by val accuracy) | `configs/effnetb2_260_acc_select.json` | 0.8614 | 0.7386 | 0.5403 | `results/summary_effnetb2_260_acc.md`, `results/confusion_matrix_effnetb2_260_acc.png`, `results/training_curves_effnetb2_260_acc.png`, `results/mel_pr_curve_effnetb2_260_acc.png`, `results/mel_threshold_effnetb2_260_acc.md`, `results/mel_threshold_curve_effnetb2_260_acc.png` |
+| Sensitivity-first (EffNet-B2 @ 260px + sampler + mel-weight, selected by val melanoma recall) | `configs/effnetb2_260_mel_sampler_select.json` | 0.5374 | 0.5666 | 0.8548 | `results/summary_effnetb2_260_mel_sampler.md`, `results/confusion_matrix_effnetb2_260_mel_sampler.png`, `results/training_curves_effnetb2_260_mel_sampler.png`, `results/mel_pr_curve_effnetb2_260_mel_sampler.png`, `results/mel_threshold_effnetb2_260_mel_sampler.md`, `results/mel_threshold_curve_effnetb2_260_mel_sampler.png` |
 
 Grad-CAM examples: `results/gradcam/README.md`.
 
 ### Conclusions (current)
 - The dataset is highly imbalanced, so **overall accuracy can be misleading**; I prioritize **melanoma sensitivity** and macro-F1.
-- In my quick ablations, the **baseline class-weighted cross-entropy** achieved the best melanoma sensitivity among the tested settings.
-- Weighted sampling improved overall accuracy but did not improve melanoma sensitivity in this run; this suggests further tuning is needed (loss, augmentations, schedules, and/or alternative backbones).
+- In my quick ablations, the **baseline class-weighted cross-entropy** achieved the best melanoma sensitivity among the early settings.
+- I can reach **>85% test accuracy** with an EfficientNet-B2 @ 260px model (see `results/summary_effnetb2_260_acc.md`).
+- I can also reach **>85% melanoma sensitivity** (top-1 recall for `mel`) with an explicitly sensitivity-first training setup, but accuracy drops sharply; this trade-off is important to show in a medical-style setting.
+- Even without sensitivity-first training, I can achieve **melanoma sensitivity ≥ 0.85** by using **thresholding on `P(mel)`** (one-vs-rest) at a chosen operating point (see `results/mel_threshold_effnetb2.md` and related plots).
 
 ### Representative visualizations
 
-Baseline confusion matrix:
+High-accuracy confusion matrix (EffNet-B2 @ 260px):
 
-![Baseline confusion matrix](results/confusion_matrix_baseline.png)
+![High-accuracy confusion matrix](results/confusion_matrix_effnetb2_260_acc.png)
 
 Melanoma detection threshold trade-off (EffNet-B2, one-vs-rest):
 

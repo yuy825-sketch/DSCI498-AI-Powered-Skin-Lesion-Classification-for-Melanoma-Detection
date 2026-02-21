@@ -260,7 +260,17 @@ def main() -> int:
         val_metrics, _ = evaluate(model=model, loader=val_loader, idx_to_class=idx_to_class, device=device)
         avg_loss = total_loss / max(1, n)
         val_mel = float(val_metrics.per_class_recall.get("mel", 0.0))
-        metric_value = val_metrics.macro_f1 if select_metric == "val_macro_f1" else val_mel
+        if select_metric == "val_macro_f1":
+            metric_value = float(val_metrics.macro_f1)
+        elif select_metric == "val_mel_recall":
+            metric_value = float(val_mel)
+        elif select_metric == "val_acc":
+            metric_value = float(val_metrics.accuracy)
+        else:
+            raise ValueError(
+                f"Unknown select_metric={select_metric!r}. "
+                "Supported: val_macro_f1, val_mel_recall, val_acc."
+            )
         history.append(
             {
                 "epoch": epoch,
