@@ -85,15 +85,15 @@ I report:
 
 ### Experiment snapshots
 
-| Experiment | Config | Test accuracy | Test macro-F1 | Melanoma sensitivity | Outputs |
-|---|---|---:|---:|---:|---|
-| Baseline (EffNet-B0 + class-weighted CE, 10 epochs) | `configs/baseline.json` | 0.7637 | 0.6650 | 0.7581 | `results/summary_baseline.md`, `results/confusion_matrix_baseline.png` |
-| Imbalance sampler (EffNet-B0 + weighted sampler, 15 epochs) | `configs/imbalance_sampler.json` | 0.8006 | 0.6756 | 0.7016 | `results/summary_sampler.md`, `results/confusion_matrix_sampler.png` |
-| Melanoma-weighted loss (EffNet-B0 + mel multiplier=3, 15 epochs) | `configs/mel_sensitive.json` | 0.7597 | 0.6285 | 0.7419 | `results/summary_melweight3.md`, `results/confusion_matrix_melweight3.png` |
-| cVAE synthetic augmentation (EffNet-B0 + extra synthetic images, 10 epochs) | `configs/baseline_with_synth.json` | 0.7926 | 0.6979 | 0.6694 | `results/summary_synth.md`, `results/confusion_matrix_synth.png`, `results/vae_samples_grid.png` |
-| Tuned backbone (EffNet-B2, checkpoint selected by val melanoma recall) | `configs/effnetb2_mel_select.json` | 0.7697 | 0.6958 | 0.7823 | `results/summary_effnetb2.md`, `results/confusion_matrix_effnetb2.png`, `results/training_curves_effnetb2.png`, `results/mel_pr_curve_effnetb2.png`, `results/mel_threshold_effnetb2.md`, `results/mel_threshold_curve_effnetb2.png` |
-| Accuracy-focused (EffNet-B2 @ 260px, checkpoint selected by val accuracy) | `configs/effnetb2_260_acc_select.json` | 0.8614 | 0.7386 | 0.5403 | `results/summary_effnetb2_260_acc.md`, `results/confusion_matrix_effnetb2_260_acc.png`, `results/training_curves_effnetb2_260_acc.png`, `results/mel_pr_curve_effnetb2_260_acc.png`, `results/mel_threshold_effnetb2_260_acc.md`, `results/mel_threshold_curve_effnetb2_260_acc.png` |
-| Sensitivity-first (EffNet-B2 @ 260px + sampler + mel-weight, selected by val melanoma recall) | `configs/effnetb2_260_mel_sampler_select.json` | 0.5374 | 0.5666 | 0.8548 | `results/summary_effnetb2_260_mel_sampler.md`, `results/confusion_matrix_effnetb2_260_mel_sampler.png`, `results/training_curves_effnetb2_260_mel_sampler.png`, `results/mel_pr_curve_effnetb2_260_mel_sampler.png`, `results/mel_threshold_effnetb2_260_mel_sampler.md`, `results/mel_threshold_curve_effnetb2_260_mel_sampler.png` |
+| Experiment | Test accuracy | Test macro-F1 | Melanoma sensitivity | Config | Outputs |
+|---|---:|---:|---:|---|---|
+| Baseline (EffNet-B0 + class-weighted CE, 10 epochs) | 0.7637 | 0.6650 | 0.7581 | [`configs/baseline.json`](configs/baseline.json) | `results/summary_baseline.md`, `results/confusion_matrix_baseline.png` |
+| Imbalance sampler (EffNet-B0 + weighted sampler, 15 epochs) | 0.8006 | 0.6756 | 0.7016 | [`configs/imbalance_sampler.json`](configs/imbalance_sampler.json) | `results/summary_sampler.md`, `results/confusion_matrix_sampler.png` |
+| Melanoma-weighted loss (EffNet-B0 + mel multiplier=3, 15 epochs) | 0.7597 | 0.6285 | 0.7419 | [`configs/mel_sensitive.json`](configs/mel_sensitive.json) | `results/summary_melweight3.md`, `results/confusion_matrix_melweight3.png` |
+| cVAE synthetic augmentation (EffNet-B0 + extra synthetic images, 10 epochs) | 0.7926 | 0.6979 | 0.6694 | [`configs/baseline_with_synth.json`](configs/baseline_with_synth.json) | `results/summary_synth.md`, `results/confusion_matrix_synth.png`, `results/vae_samples_grid.png` |
+| Tuned backbone (EffNet-B2, checkpoint selected by val melanoma recall) | 0.7697 | 0.6958 | 0.7823 | [`configs/effnetb2_mel_select.json`](configs/effnetb2_mel_select.json) | `results/summary_effnetb2.md`, `results/confusion_matrix_effnetb2.png`, `results/training_curves_effnetb2.png`, `results/mel_pr_curve_effnetb2.png`, `results/mel_threshold_effnetb2.md`, `results/mel_threshold_curve_effnetb2.png` |
+| Accuracy-focused (EffNet-B2 @ 260px, checkpoint selected by val accuracy) | 0.8614 | 0.7386 | 0.5403 | [`configs/effnetb2_260_acc_select.json`](configs/effnetb2_260_acc_select.json) | `results/summary_effnetb2_260_acc.md`, `results/confusion_matrix_effnetb2_260_acc.png`, `results/training_curves_effnetb2_260_acc.png`, `results/mel_pr_curve_effnetb2_260_acc.png`, `results/mel_threshold_effnetb2_260_acc.md`, `results/mel_threshold_curve_effnetb2_260_acc.png` |
+| Sensitivity-first (EffNet-B2 @ 260px + sampler + mel-weight, selected by val melanoma recall) | 0.5374 | 0.5666 | 0.8548 | [`configs/effnetb2_260_mel_sampler_select.json`](configs/effnetb2_260_mel_sampler_select.json) | `results/summary_effnetb2_260_mel_sampler.md`, `results/confusion_matrix_effnetb2_260_mel_sampler.png`, `results/training_curves_effnetb2_260_mel_sampler.png`, `results/mel_pr_curve_effnetb2_260_mel_sampler.png`, `results/mel_threshold_effnetb2_260_mel_sampler.md`, `results/mel_threshold_curve_effnetb2_260_mel_sampler.png` |
 
 Grad-CAM examples: `results/gradcam/README.md`.
 
