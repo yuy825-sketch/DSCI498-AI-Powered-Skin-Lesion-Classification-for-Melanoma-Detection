@@ -64,8 +64,31 @@ def evaluate(
     return Metrics(accuracy=acc, macro_f1=macro_f1, per_class_recall=per_class_recall, confusion_matrix=cm), report
 
 
+@torch.no_grad()
+def predict_proba(
+    *,
+    model: nn.Module,
+    loader,
+    device: torch.device,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Returns:
+      y_true: (N,)
+      probs: (N, C)
+    """
+    model.eval()
+    y_true: list[int] = []
+    probs: list[np.ndarray] = []
+    for x, y in loader:
+        x = x.to(device)
+        logits = model(x)
+        p = torch.softmax(logits, dim=1).detach().cpu().numpy()
+        probs.append(p)
+        y_true.extend(y.numpy().tolist())
+    return np.asarray(y_true, dtype=np.int64), np.concatenate(probs, axis=0)
+
+
 def save_json(path: Path, obj: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         json.dump(obj, f, indent=2)
-

@@ -15,7 +15,7 @@ from dsci498_skin.data.split import group_shuffle_split
 from dsci498_skin.data.synthetic import SyntheticImageFolder
 from dsci498_skin.models.cnn import CnnConfig, build_model
 from dsci498_skin.runpack import RunMeta, copy_config, create_run_dir, git_head_sha, utc_now, write_meta
-from dsci498_skin.train_utils import evaluate, save_json, seed_everything
+from dsci498_skin.train_utils import evaluate, predict_proba, save_json, seed_everything
 
 
 def _load_config(path: Path) -> dict:
@@ -26,7 +26,7 @@ def _load_config(path: Path) -> dict:
 def _make_transforms(image_size: int) -> tuple[transforms.Compose, transforms.Compose]:
     train_tf = transforms.Compose(
         [
-            transforms.Resize((image_size, image_size)),
+            transforms.RandomResizedCrop(size=image_size, scale=(0.7, 1.0)),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomVerticalFlip(p=0.5),
             transforms.RandomRotation(degrees=25),
@@ -38,6 +38,7 @@ def _make_transforms(image_size: int) -> tuple[transforms.Compose, transforms.Co
     eval_tf = transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
+            transforms.CenterCrop(size=image_size),
             transforms.ToTensor(),
             transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ]
@@ -129,7 +130,30 @@ def main() -> int:
     else:
         class_weights = None
 
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    label_smoothing = float(cfg["train"].get("label_smoothing", 0.0))
+    use_focal = bool(cfg["train"].get("use_focal_loss", False))
+    focal_gamma = float(cfg["train"].get("focal_gamma", 2.0))
+
+    def _ce_loss(logits: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return nn.functional.cross_entropy(
+            logits,
+            y,
+            weight=class_weights,
+            label_smoothing=label_smoothing,
+        )
+
+    def _focal_loss(logits: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        ce = nn.functional.cross_entropy(
+            logits,
+            y,
+            weight=class_weights,
+            label_smoothing=label_smoothing,
+            reduction="none",
+        )
+        pt = torch.exp(-ce)
+        return ((1 - pt) ** focal_gamma * ce).mean()
+
+    criterion = _focal_loss if use_focal else _ce_loss
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=float(cfg["train"]["lr"]),
@@ -163,10 +187,21 @@ def main() -> int:
             "dx_to_name": DX_TO_NAME,
         },
     )
+    save_json(
+        outdir / "split.json",
+        {
+            "train_image_ids": [samples[i].image_id for i in split.train_idx],
+            "val_image_ids": [samples[i].image_id for i in split.val_idx],
+            "test_image_ids": [samples[i].image_id for i in split.test_idx],
+            "split_seed": int(cfg["dataset"]["split_seed"]),
+        },
+    )
 
-    best_val_macro_f1 = -1.0
+    select_metric = str(cfg["train"].get("select_metric", "val_macro_f1"))
+    best_metric = -1.0
     best_ckpt = outdir / "best.pt"
     epochs = int(cfg["train"]["epochs"])
+    history: list[dict] = []
     for epoch in range(1, epochs + 1):
         model.train()
         total_loss = 0.0
@@ -184,17 +219,33 @@ def main() -> int:
 
         val_metrics, _ = evaluate(model=model, loader=val_loader, idx_to_class=idx_to_class, device=device)
         avg_loss = total_loss / max(1, n)
+        val_mel = float(val_metrics.per_class_recall.get("mel", 0.0))
+        metric_value = val_metrics.macro_f1 if select_metric == "val_macro_f1" else val_mel
+        history.append(
+            {
+                "epoch": epoch,
+                "train_loss": avg_loss,
+                "val_acc": val_metrics.accuracy,
+                "val_macro_f1": val_metrics.macro_f1,
+                "val_mel_recall": val_mel,
+                "selected_metric": float(metric_value),
+            }
+        )
         print(
             f"epoch={epoch:03d} loss={avg_loss:.4f} "
             f"val_acc={val_metrics.accuracy:.4f} val_macro_f1={val_metrics.macro_f1:.4f}"
         )
-        if val_metrics.macro_f1 > best_val_macro_f1:
-            best_val_macro_f1 = val_metrics.macro_f1
+        if float(metric_value) > best_metric:
+            best_metric = float(metric_value)
             torch.save({"model": model.state_dict(), "cfg": cfg}, best_ckpt)
 
     ckpt = torch.load(best_ckpt, map_location=device)
     model.load_state_dict(ckpt["model"])
     test_metrics, test_report = evaluate(model=model, loader=test_loader, idx_to_class=idx_to_class, device=device)
+    y_true, probs = predict_proba(model=model, loader=test_loader, device=device)
+    np.savez_compressed(outdir / "test_outputs.npz", y_true=y_true, probs=probs, classes=np.asarray(classes))
+
+    save_json(outdir / "history.json", {"select_metric": select_metric, "history": history})
 
     save_json(
         outdir / "metrics.json",

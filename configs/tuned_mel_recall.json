@@ -1,0 +1,30 @@
+{
+  "dataset": {
+    "root": "data/ham10000",
+    "image_size": 224,
+    "split_seed": 42,
+    "train_frac": 0.8,
+    "val_frac": 0.1,
+    "test_frac": 0.1
+  },
+  "train": {
+    "seed": 1,
+    "epochs": 25,
+    "batch_size": 32,
+    "lr": 0.0002,
+    "weight_decay": 0.0001,
+    "num_workers": 4,
+    "use_class_weights": true,
+    "mel_weight_multiplier": 5.0,
+    "use_focal_loss": true,
+    "focal_gamma": 2.0,
+    "label_smoothing": 0.0,
+    "select_metric": "val_mel_recall"
+  },
+  "model": {
+    "backbone": "efficientnet_b0",
+    "pretrained": true,
+    "dropout": 0.3
+  }
+}
+
