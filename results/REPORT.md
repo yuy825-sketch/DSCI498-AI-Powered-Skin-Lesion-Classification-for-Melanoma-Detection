@@ -105,11 +105,11 @@ HAM10000 contains multiple images per lesion (`lesion_id`). To reduce train/test
 
 ### 3.1 CNN classifier
 
-I train a CNN image classifier using EfficientNet backbones [2] with ImageNet-style normalization. Given an input image \(x\), the network produces logits \(z \in \mathbb{R}^K\) for \(K=7\) classes, and class probabilities are obtained via softmax:
+I train a CNN image classifier using EfficientNet backbones [2] with ImageNet-style normalization. Given an input image $x$, the network produces logits $z \in \mathbb{R}^K$ for $K=7$ classes, and class probabilities are obtained via softmax:
 
-\[
+$$
 p_k = \mathrm{softmax}(z)_k = \frac{\exp(z_k)}{\sum_{j=1}^{K}\exp(z_j)}.
-\]
+$$
 
 I use transfer learning (ImageNet-pretrained backbone) and fine-tune on HAM10000. EfficientNet provides a strong accuracy/efficiency trade-off via compound scaling of depth/width/resolution [2].
 
@@ -120,13 +120,13 @@ I evaluate multiple imbalance-handling strategies:
 - **Weighted sampling** (to rebalance minibatches)
 - **Melanoma-weighted loss** (explicitly prioritizing `mel` recall)
 
-For class-weighted cross-entropy, the loss for a sample with true label \(y\) is:
+For class-weighted cross-entropy, the loss for a sample with true label $y$ is:
 
-\[
+$$
 \mathcal{L}_{\mathrm{WCE}} = - w_y \log(p_y),
-\]
+$$
 
-where \(w_y\) is a class weight (typically larger for minority classes). When prioritizing melanoma sensitivity, I additionally upweight melanoma by a multiplier \(m>1\) (i.e., \(w_{\text{mel}} \leftarrow m \cdot w_{\text{mel}}\)).
+where $w_y$ is a class weight (typically larger for minority classes). When prioritizing melanoma sensitivity, I additionally upweight melanoma by a multiplier $m>1$ (i.e., $w_{\text{mel}} \leftarrow m \cdot w_{\text{mel}}$).
 
 Weighted sampling approximates rebalanced training by drawing examples with probability inversely proportional to class frequency. This can increase minority-class exposure but may reduce calibration and overall accuracy if over-applied.
 
@@ -134,43 +134,43 @@ Weighted sampling approximates rebalanced training by drawing examples with prob
 
 Beyond top-1 multiclass prediction, I treat `P(mel)` as a melanoma detection score and sweep thresholds to obtain precision/recall trade-offs and a suggested operating point (e.g., recall ≥ 0.85).
 
-Formally, define the melanoma score \(s(x) = p_{\text{mel}}(x)\). For a threshold \(t\),
-\[
+Formally, define the melanoma score $s(x) = p_{\text{mel}}(x)$. For a threshold $t$,
+$$
 \hat{y}_{\text{mel}}(x;t) = \mathbb{1}[s(x)\ge t].
-\]
+$$
 On a test set, precision and recall are:
-\[
+$$
 \mathrm{Precision}(t) = \frac{TP(t)}{TP(t)+FP(t)}, \quad
 \mathrm{Recall}(t) = \frac{TP(t)}{TP(t)+FN(t)}.
-\]
+$$
 
 ### 3.4 Interpretability (Grad-CAM)
 
-Grad-CAM provides qualitative heatmaps showing image regions most influencing a predicted class [3]. Let \(A^k\) be the \(k\)-th feature map in the chosen convolutional layer and \(y^c\) be the logit for class \(c\). Grad-CAM computes weights:
+Grad-CAM provides qualitative heatmaps showing image regions most influencing a predicted class [3]. Let $A^k$ be the $k$-th feature map in the chosen convolutional layer and $y^c$ be the logit for class $c$. Grad-CAM computes weights:
 
-\[
+$$
 \alpha_k^c = \frac{1}{Z}\sum_{i}\sum_{j}\frac{\partial y^c}{\partial A_{ij}^{k}},
-\]
+$$
 
 and the class activation map:
 
-\[
+$$
 L_{\mathrm{Grad\text{-}CAM}}^c = \mathrm{ReLU}\left(\sum_k \alpha_k^c A^k\right).
-\]
+$$
 
-This produces a coarse localization map highlighting regions that most increase the score for class \(c\).
+This produces a coarse localization map highlighting regions that most increase the score for class $c$.
 
 ### 3.5 Optional generative augmentation (cVAE)
 
 I include a conditional variational autoencoder (cVAE) for a synthetic augmentation ablation. A VAE optimizes the evidence lower bound (ELBO):
 
-\[
+$$
 \mathcal{L}_{\mathrm{ELBO}} =
 \mathbb{E}_{q_\phi(z|x)}[\log p_\theta(x|z)]
 - \mathrm{KL}\left(q_\phi(z|x)\,\|\,p(z)\right),
-\]
+$$
 
-and the conditional version incorporates a class condition \(y\) (i.e., \(q_\phi(z|x,y)\), \(p_\theta(x|z,y)\)).
+and the conditional version incorporates a class condition $y$ (i.e., $q_\phi(z|x,y)$, $p_\theta(x|z,y)$).
 
 ### 3.6 Preprocessing and augmentation
 
@@ -189,19 +189,19 @@ Because HAM10000 is imbalanced, I report multiple metrics:
 - **Macro-F1**: unweighted average F1 across classes; more informative for minority classes.
 - **Per-class recall**: for each class, recall = TP / (TP + FN). In particular, **melanoma sensitivity** is recall for `mel`.
 
-For a class \(c\), precision and recall are:
-\[
+For a class $c$, precision and recall are:
+$$
 \mathrm{Precision}_c = \frac{TP_c}{TP_c+FP_c}, \quad
 \mathrm{Recall}_c = \frac{TP_c}{TP_c+FN_c},
-\]
+$$
 and the class F1 score is:
-\[
+$$
 F1_c = \frac{2\,\mathrm{Precision}_c\,\mathrm{Recall}_c}{\mathrm{Precision}_c+\mathrm{Recall}_c}.
-\]
+$$
 Macro-F1 is the mean over classes:
-\[
+$$
 \mathrm{MacroF1} = \frac{1}{K}\sum_{c=1}^{K} F1_c.
-\]
+$$
 
 ## 4. Experiments
 
