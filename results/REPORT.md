@@ -80,11 +80,11 @@ Additional dataset descriptors (from metadata):
 - `dataset` subsets: `vidir_molemax` (3954), `vidir_modern` (3363), `rosendahl` (2259), `vienna_dias` (439)
 - Missingness: `age` missing rate is ~0.57%; `sex`/`localization` have no missing values in this CSV.
 
-![HAM10000 class distribution](dataset/class_distribution.png)
+<img src="dataset/class_distribution.png" width="560" alt="HAM10000 class distribution">
 
 *Figure 1. Class distribution of HAM10000 (`dx`). The dataset is highly imbalanced (dominant `nv`), motivating macro-F1 and melanoma-focused evaluation in addition to accuracy.*
 
-![HAM10000 metadata overview](dataset/metadata_stats.png)
+<img src="dataset/metadata_stats.png" width="720" alt="HAM10000 metadata overview">
 
 *Figure 2. Metadata overview (age, sex, and top-10 localizations). These covariates can contribute to dataset bias and should be considered when interpreting results.*
 
@@ -186,7 +186,7 @@ Important nuance: these targets are achieved by **different operating modes** (d
 
 ### 5.3 Accuracy-focused model (best overall accuracy)
 
-<img src="confusion_matrix_effnetb2_260_acc.png" width="420" alt="Confusion matrix (accuracy-focused)">
+<img src="confusion_matrix_effnetb2_260_acc.png" width="360" alt="Confusion matrix (accuracy-focused)">
 
 *Figure 4. Confusion matrix for the accuracy-focused EfficientNet-B2@260 run. Accuracy is strong due to the dominant `nv` class, while minority classes (especially `mel`) remain challenging.*
 
@@ -194,7 +194,7 @@ Key observations from Figure 4:
 - The model is very strong on the majority class `nv`, which boosts overall accuracy.
 - Many melanoma (`mel`) samples are confused with visually similar pigmented lesion classes (e.g., `nv`, `bkl`), which reduces top-1 melanoma recall in this operating mode.
 
-![Training curves (accuracy-focused)](training_curves_effnetb2_260_acc.png)
+<img src="training_curves_effnetb2_260_acc.png" width="760" alt="Training curves (accuracy-focused)">
 
 *Figure 5. Training dynamics for the accuracy-focused run. The curves show validation metrics across epochs and support checkpoint selection by validation accuracy.*
 
@@ -204,7 +204,7 @@ Analysis: This run achieves **>0.85 test accuracy** and the best macro-F1 among 
 
 Using `P(mel)` as a one-vs-rest detection score yields a sensitivity/precision trade-off:
 
-![Melanoma threshold trade-off](mel_threshold_curve_effnetb2.png)
+<img src="mel_threshold_curve_effnetb2.png" width="760" alt="Melanoma threshold trade-off">
 
 *Figure 6. Precision/recall vs threshold for melanoma detection (EffNet-B2). Lower thresholds increase sensitivity but reduce precision (more false positives).*
 
@@ -214,7 +214,7 @@ To make this concrete, the threshold sweep tables (e.g., `mel_threshold_effnetb2
 
 ### 5.5 Sensitivity-first training (high melanoma recall under top-1)
 
-<img src="confusion_matrix_effnetb2_260_mel_sampler.png" width="420" alt="Confusion matrix (sensitivity-first)">
+<img src="confusion_matrix_effnetb2_260_mel_sampler.png" width="360" alt="Confusion matrix (sensitivity-first)">
 
 *Figure 7. Confusion matrix for the sensitivity-first run (EffNet-B2@260 with sampler + melanoma-weighted loss). Melanoma recall exceeds 0.85 under top-1, but many non-melanoma samples are pulled toward `mel`, which hurts overall accuracy.*
 
