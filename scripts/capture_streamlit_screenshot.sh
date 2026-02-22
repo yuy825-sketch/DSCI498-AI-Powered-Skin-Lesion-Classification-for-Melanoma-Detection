@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Captures a Streamlit demo screenshot using Firefox headless.
+# Captures a Streamlit demo screenshot using geckodriver (WebDriver) so it can
+# wait for Streamlit to render (avoids blank/white screenshots).
 #
 # Usage example (with the project conda env):
 #   export LD_PRELOAD=$CONDA_PREFIX/lib/libittnotify.so
@@ -15,7 +16,6 @@ PORT="${PORT:-8502}"
 WINDOW_SIZE="${WINDOW_SIZE:-1400,900}"
 OUT_PATH="${OUT_PATH:-results/streamlit_demo.png}"
 
-TMP_SHOT="${HOME}/streamlit_demo.png"
 URL="http://localhost:${PORT}/?demo=1"
 
 "${PYTHON_BIN}" -m streamlit run app/app.py \
@@ -27,33 +27,20 @@ URL="http://localhost:${PORT}/?demo=1"
   >/tmp/streamlit_demo.log 2>&1 &
 pid=$!
 
-"${PYTHON_BIN}" - <<PY
-import time, urllib.request
-url = "${URL}"
-for _ in range(90):
-    try:
-        urllib.request.urlopen(url, timeout=1).read(200)
-        print("ready")
-        break
-    except Exception:
-        time.sleep(1)
-else:
-    raise SystemExit("streamlit not ready")
+python3 - <<PY
+from pathlib import Path
+w,h = "${WINDOW_SIZE}".split(",")
+print("capturing", "${URL}", "->", "${OUT_PATH}", "size", w, h)
 PY
 
-firefox --headless --window-size "${WINDOW_SIZE}" --screenshot "${TMP_SHOT}" "${URL}" >/tmp/firefox_screenshot.log 2>&1
+"${PYTHON_BIN}" scripts/capture_streamlit_screenshot.py \
+  --url "${URL}" \
+  --out "${OUT_PATH}" \
+  --width "${WINDOW_SIZE%,*}" \
+  --height "${WINDOW_SIZE#*,}" \
+  --timeout 120
 
 kill "${pid}" >/dev/null 2>&1 || true
 sleep 1
 
-"${PYTHON_BIN}" - <<PY
-from pathlib import Path
-src = Path("${TMP_SHOT}")
-dst = Path("${OUT_PATH}")
-dst.parent.mkdir(parents=True, exist_ok=True)
-dst.write_bytes(src.read_bytes())
-print("wrote", dst)
-PY
-
 ls -la "${OUT_PATH}"
-
