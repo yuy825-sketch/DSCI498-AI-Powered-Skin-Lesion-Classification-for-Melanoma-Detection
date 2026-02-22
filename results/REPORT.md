@@ -4,9 +4,9 @@ This report is written for course submission. It documents the dataset, methods,
 
 ## Abstract
 
-I built an end-to-end deep learning system to classify dermatoscopic skin lesion images from the **HAM10000** dataset (7 diagnostic categories) [1]. The project emphasizes (i) strong overall multiclass performance under severe class imbalance and (ii) **melanoma sensitivity** (recall for `mel`) as a safety-critical metric. I evaluate multiple imbalance-handling strategies (class-weighted loss, weighted sampling, melanoma upweighting, and a small synthetic augmentation ablation), report confusion matrices and per-class recall, and analyze melanoma detection operating points by thresholding the model’s `P(mel)` output.
+This project implements an end-to-end deep learning system to classify dermatoscopic skin lesion images from the **HAM10000** dataset (7 diagnostic categories) [1]. The work emphasizes (i) strong overall multiclass performance under severe class imbalance and (ii) **melanoma sensitivity** (recall for `mel`) as a safety-critical metric. Multiple imbalance-handling strategies are evaluated (class-weighted loss, weighted sampling, melanoma upweighting, and a small synthetic augmentation ablation). Confusion matrices and per-class recall are reported, and melanoma detection operating points are analyzed by thresholding the model’s `P(mel)` output.
 
-On my fixed lesion-wise split, the best accuracy-focused model (EfficientNet-B2 @ 260px) reaches **0.8614** test accuracy and **0.7386** macro-F1, while a sensitivity-first training setup reaches **0.8548** top-1 melanoma recall at the cost of overall accuracy. A practical sensitivity-first operating mode can also be obtained via thresholding: for an EfficientNet-B2 melanoma-aware model, selecting a threshold that enforces **recall ≥ 0.85** yields **precision ≈ 0.322** with **recall ≈ 0.855** on the test set. Finally, I include qualitative interpretability via Grad-CAM [3] and a Streamlit demo app for interactive upload → prediction → heatmap visualization.
+On the fixed lesion-wise split used throughout the report, the best accuracy-focused model (EfficientNet-B2 @ 260px) reaches **0.8614** test accuracy and **0.7386** macro-F1, while a sensitivity-first training setup reaches **0.8548** top-1 melanoma recall at the cost of overall accuracy. A practical sensitivity-first operating mode can also be obtained via thresholding: for an EfficientNet-B2 melanoma-aware model, selecting a threshold that enforces **recall ≥ 0.85** yields **precision ≈ 0.322** with **recall ≈ 0.855** on the test set. Qualitative interpretability via Grad-CAM [3] and a Streamlit demo app for interactive upload → prediction → heatmap visualization are included.
 
 ## Table of contents
 
@@ -24,7 +24,7 @@ On my fixed lesion-wise split, the best accuracy-focused model (EfficientNet-B2 
 
 ## 1. Problem statement
 
-Skin lesion classification is a high-impact application of computer vision. The key challenge in this dataset is **class imbalance** (a large majority of benign nevi) and visually overlapping lesion appearance. For melanoma detection, false negatives are particularly concerning, so I explicitly track melanoma sensitivity and also analyze threshold-based operating points using the model’s `P(mel)` output.
+Skin lesion classification is a high-impact application of computer vision. The key challenge in this dataset is **class imbalance** (a large majority of benign nevi) and visually overlapping lesion appearance. For melanoma detection, false negatives are particularly concerning, so melanoma sensitivity is explicitly tracked and threshold-based operating points are analyzed using the model’s `P(mel)` output.
 
 ### 1.1 Context and brief related work
 
@@ -42,7 +42,7 @@ This project is designed as a complete, demonstrable course submission:
 
 ## 2. Dataset
 
-I use **HAM10000** (Human Against Machine with 10,000 training images), a widely used dataset of **dermatoscopic skin lesion images** with diagnostic labels and basic patient/lesion metadata.
+This project uses **HAM10000** (Human Against Machine with 10,000 training images), a widely used dataset of **dermatoscopic skin lesion images** with diagnostic labels and basic patient/lesion metadata.
 
 Dataset sources:
 - Harvard Dataverse (DOI): `doi:10.7910/DVN/DBW86T` [17]
@@ -52,7 +52,7 @@ HAM10000 images are **dermoscopic photographs** captured under clinical imaging 
 
 ### 2.1 Labels (`dx`) and their meaning
 
-The classification target is the `dx` column (7 classes). I use the following label codes and human-readable names:
+The classification target is the `dx` column (7 classes). The following label codes and human-readable names are used:
 
 | `dx` code | Meaning |
 |---|---|
@@ -124,7 +124,7 @@ Additional dataset descriptors (from metadata):
 
 ### 2.5 Split strategy (leakage-aware)
 
-HAM10000 contains multiple images per lesion (`lesion_id`). To reduce train/test leakage, I use a **lesion-wise grouped split** (grouped by `lesion_id`) into train/val/test with a fixed seed.
+HAM10000 contains multiple images per lesion (`lesion_id`). To reduce train/test leakage, a **lesion-wise grouped split** (grouped by `lesion_id`) is used to form train/val/test with a fixed seed.
 
 On my fixed split, the image counts are:
 - Train: 8012 images
@@ -145,90 +145,90 @@ Several dataset properties directly influence model design and evaluation:
 
 ### 3.1 CNN classifier
 
-I train a CNN image classifier using EfficientNet backbones [2] with ImageNet-style normalization. Given an input image $x$, the network produces logits $z \in \mathbb{R}^K$ for $K=7$ classes, and class probabilities are obtained via softmax:
+A CNN image classifier is trained using EfficientNet backbones [2] with ImageNet-style normalization. Given an input image `x`, the network produces logits `z` for `K=7` classes, and class probabilities are obtained via softmax:
 
-$$
+```math
 p_k = \mathrm{softmax}(z)_k = \frac{\exp(z_k)}{\sum_{j=1}^{K}\exp(z_j)}.
-$$
+```
 
-I use transfer learning (ImageNet-pretrained backbone) and fine-tune on HAM10000. EfficientNet provides a strong accuracy/efficiency trade-off via compound scaling of depth/width/resolution [2].
+The models use transfer learning (ImageNet-pretrained backbone) and are fine-tuned on HAM10000. EfficientNet provides a strong accuracy/efficiency trade-off via compound scaling of depth/width/resolution [2].
 
 In implementation terms, the model consists of (i) an EfficientNet backbone, (ii) a dropout layer, and (iii) a linear classification head to produce 7 logits. During training, mixed precision (AMP) is enabled when a CUDA GPU is available, which speeds up training while keeping memory usage manageable.
 
 ### 3.2 Handling class imbalance
 
-I evaluate multiple imbalance-handling strategies:
+Several imbalance-handling strategies are evaluated:
 - **Class-weighted cross-entropy** (baseline)
 - **Weighted sampling** (to rebalance minibatches)
 - **Melanoma-weighted loss** (explicitly prioritizing `mel` recall)
 
-For class-weighted cross-entropy, the loss for a sample with true label $y$ is:
+For class-weighted cross-entropy, the loss for a sample with true label `y` is:
 
-$$
+```math
 \mathcal{L}_{\mathrm{WCE}} = - w_y \log(p_y),
-$$
+```
 
-where $w_y$ is a class weight (typically larger for minority classes). When prioritizing melanoma sensitivity, I additionally upweight melanoma by a multiplier $m>1$ (i.e., $w_{\text{mel}} \leftarrow m \cdot w_{\text{mel}}$).
+where `w_y` is a class weight (typically larger for minority classes). When prioritizing melanoma sensitivity, the melanoma weight is additionally upweighted by a multiplier `m>1` (i.e., `w_mel ← m · w_mel`).
 
-In this project, the base class weights are computed from training-set counts $n_c$ as:
-$$
+In this project, the base class weights are computed from training-set counts `n_c` as:
+```math
 w_c \propto \frac{\sum_{j=1}^{K} n_j}{n_c + \epsilon},
-$$
+```
 and then normalized so that the mean weight is 1 (to keep the overall loss scale stable across runs).
 
-Weighted sampling approximates rebalanced training by drawing examples with probability inversely proportional to class frequency. Intuitively, this changes the *effective* training distribution to reduce minibatch dominance by `nv`. If $\pi_i$ denotes the sampling probability for training example $i$ with class $y_i$, then:
-$$
+Weighted sampling approximates rebalanced training by drawing examples with probability inversely proportional to class frequency. Intuitively, this changes the *effective* training distribution to reduce minibatch dominance by `nv`. If `pi_i` denotes the sampling probability for training example `i` with class `y_i`, then:
+```math
 \pi_i \propto w_{y_i}.
-$$
+```
 
-I also include two additional knobs that can interact with imbalance:
+Two additional knobs that can interact with imbalance are also included:
 - **Label smoothing** (used in the accuracy-focused EfficientNet-B2@260 run) can improve generalization and reduce overconfidence.
 - **Focal loss** (available as an option) down-weights easy examples to focus learning on harder cases [6].
 - **Class-balanced losses** (not used in my final runs) provide an alternative reweighting scheme based on the “effective number of samples” [7].
 
 ### 3.3 Threshold-based melanoma detection (one-vs-rest)
 
-Beyond top-1 multiclass prediction, I treat `P(mel)` as a melanoma detection score and sweep thresholds to obtain precision/recall trade-offs and a suggested operating point (e.g., recall ≥ 0.85).
+Beyond top-1 multiclass prediction, `P(mel)` is treated as a melanoma detection score and thresholds are swept to obtain precision/recall trade-offs and suggested operating points (e.g., recall ≥ 0.85).
 
-Formally, define the melanoma score $s(x) = p_{\text{mel}}(x)$. For a threshold $t$,
-$$
+Formally, define the melanoma score `s(x) = p_mel(x)`. For a threshold `t`,
+```math
 \hat{y}_{\text{mel}}(x;t) = \mathbf{1}[s(x)\ge t].
-$$
+```
 On a test set, precision and recall are:
-$$
+```math
 \mathrm{Precision}(t) = \frac{TP(t)}{TP(t)+FP(t)}, \quad
 \mathrm{Recall}(t) = \frac{TP(t)}{TP(t)+FN(t)}.
-$$
+```
 
 This threshold analysis is intentionally decision-oriented: it makes explicit how the same model can be used under different objectives (high-accuracy multiclass classification vs high-sensitivity melanoma screening) without pretending a single top-1 metric captures clinical risk.
 
 ### 3.4 Interpretability (Grad-CAM)
 
-Grad-CAM provides qualitative heatmaps showing image regions most influencing a predicted class [3]. Let $A^k$ be the $k$-th feature map in the chosen convolutional layer and $y^c$ be the logit for class $c$. Grad-CAM computes weights:
+Grad-CAM provides qualitative heatmaps showing image regions most influencing a predicted class [3]. Let `A^k` be the `k`-th feature map in the chosen convolutional layer and let `y^c` be the logit for class `c`. Grad-CAM computes weights:
 
-$$
+```math
 \alpha_k^c = \frac{1}{Z}\sum_{i}\sum_{j}\frac{\partial y^c}{\partial A_{ij}^{k}},
-$$
+```
 
 and the class activation map:
 
-$$
+```math
 L_{\mathrm{GradCAM}}^c = \mathrm{ReLU}\left(\sum_k \alpha_k^c A^k\right).
-$$
+```
 
-This produces a coarse localization map highlighting regions that most increase the score for class $c$.
+This produces a coarse localization map highlighting regions that most increase the score for class `c`.
 
 ### 3.5 Optional generative augmentation (cVAE)
 
-I include a conditional variational autoencoder (cVAE) for a synthetic augmentation ablation. A VAE optimizes the evidence lower bound (ELBO):
+A conditional variational autoencoder (cVAE) is included for a synthetic augmentation ablation. A VAE optimizes the evidence lower bound (ELBO):
 
-$$
+```math
 \mathcal{L}_{\mathrm{ELBO}} =
 \mathbb{E}_{q_\phi(z|x)}[\log p_\theta(x|z)]
 - \mathrm{KL}\left(q_\phi(z|x)\,\|\,p(z)\right),
-$$
+```
 
-and the conditional version incorporates a class condition $y$ (i.e., $q_\phi(z|x,y)$, $p_\theta(x|z,y)$).
+and the conditional version incorporates a class condition `y` (i.e., `q_φ(z|x,y)`, `p_θ(x|z,y)`).
 
 ### 3.6 Preprocessing and augmentation
 
@@ -244,47 +244,59 @@ These augmentations aim to reduce overfitting and improve robustness to plausibl
 
 ### 3.7 Optimization and checkpoint selection
 
-I use AdamW optimization [4] with mixed precision (AMP) enabled for GPU training. A “best checkpoint” is selected based on a validation metric, such as:
+AdamW optimization [4] is used with mixed precision (AMP) enabled for GPU training. A “best checkpoint” is selected based on a validation metric, such as:
 - validation accuracy (accuracy-focused run)
 - validation melanoma recall (sensitivity-focused runs)
 
 This deliberate choice of selection metric is part of the experimental design: selecting by validation accuracy tends to favor the dominant class, while selecting by melanoma recall explicitly prioritizes sensitivity. In all cases, the final reported test metrics are computed using the selected best checkpoint.
 
-### 3.8 Evaluation metrics (what I report and why)
+### 3.8 Evaluation metrics (what is reported and why)
 
-Because HAM10000 is imbalanced, I report multiple metrics:
+Because HAM10000 is imbalanced, multiple metrics are reported:
 - **Accuracy**: overall fraction correct; can be inflated by the dominant `nv` class.
 - **Macro-F1**: unweighted average F1 across classes; more informative for minority classes.
 - **Per-class recall**: for each class, recall = TP / (TP + FN). In particular, **melanoma sensitivity** is recall for `mel`.
 
-For a class $c$, precision and recall are:
-$$
+For a class `c`, precision and recall are:
+```math
 \mathrm{Precision}_c = \frac{TP_c}{TP_c+FP_c}, \quad
 \mathrm{Recall}_c = \frac{TP_c}{TP_c+FN_c},
-$$
+```
 and the class F1 score is:
-$$
+```math
 F1_c = \frac{2\,\mathrm{Precision}_c\,\mathrm{Recall}_c}{\mathrm{Precision}_c+\mathrm{Recall}_c}.
-$$
+```
 Macro-F1 is the mean over classes:
-$$
+```math
 \mathrm{MacroF1} = \frac{1}{K}\sum_{c=1}^{K} F1_c.
-$$
+```
 
 ## 4. Experiments
 
-I report:
-- test accuracy
-- test macro-F1
-- test per-class recall (including melanoma sensitivity = recall for `mel`)
+All experiments are evaluated on the same held-out test split (lesion-wise grouped). The evaluation reports:
+- **test accuracy** (overall correctness)
+- **test macro-F1** (imbalance-aware summary)
+- **test per-class recall**, with emphasis on **melanoma sensitivity** (recall for `mel`)
 
-All figures and quantitative results needed for this submission are included directly in this report.
+For each tracked run, the following artifacts are produced and summarized in this report:
+- confusion matrix (multiclass error structure)
+- training curves (training dynamics and checkpoint selection behavior)
+- melanoma threshold curve (precision/recall vs threshold using `P(mel)`)
+
+The goal is not only to present a single “best score”, but to explain *why* certain objectives (overall accuracy vs melanoma recall) pull the model toward different operating points.
 
 ### 4.1 Experiment set (ablations and tuning)
 
-I ran a small set of experiments designed to answer:
-1) How much do imbalance-handling strategies affect melanoma recall?
-2) Can I reach high overall accuracy while still documenting a high-sensitivity operating mode?
+A focused set of experiments is designed to answer:
+1) How much do imbalance-handling strategies affect melanoma recall and macro-F1?
+2) Can a strong overall classifier be obtained while also documenting a high-sensitivity screening operating point?
+
+Experimental protocol (consistent across runs):
+- The same lesion-wise grouped train/val/test split is used for all runs.
+- Each run trains for a fixed number of epochs (typically 10–30 depending on the run) with AdamW and standard image augmentations described in Section 3.
+- Model selection is performed on the validation split using a single chosen selection metric (validation accuracy or validation melanoma recall), and the selected checkpoint is evaluated once on the test split.
+
+This design makes the comparisons interpretable: changes in test behavior can be attributed primarily to the imbalance strategy (sampler vs weighting), backbone capacity (EffNet-B0 vs EffNet-B2), input resolution (224 vs 260), and checkpoint selection criterion (accuracy vs melanoma recall).
 
 The tracked experiments include:
 - **Baseline**: EfficientNet-B0 with class-weighted cross-entropy.
@@ -312,12 +324,14 @@ To make the experiments easier to interpret, Table 1 summarizes the most importa
 
 ### 5.1 Evaluation objectives
 
-Given the dataset’s imbalance and the safety-critical nature of melanoma, I structure the evaluation around three objectives:
+Given the dataset’s imbalance and the safety-critical nature of melanoma, the evaluation is structured around three objectives:
 1) **Strong overall performance** (accuracy and macro-F1) under class imbalance
 2) **High melanoma sensitivity** (melanoma recall), even if it requires a different operating point
 3) **Interpretability + demo** for a complete end-to-end deliverable
 
-As a result, I present both (i) an accuracy-focused multiclass classifier and (ii) sensitivity-first operating modes via thresholding or targeted training.
+As a result, the report presents both (i) an accuracy-focused multiclass classifier and (ii) sensitivity-first operating modes via thresholding or targeted training.
+
+These objectives are intentionally complementary rather than mutually exclusive. Accuracy and macro-F1 summarize general multiclass utility, but they do not fully describe melanoma risk. Conversely, maximizing melanoma recall in training can distort the multiclass decision boundary and produce too many false positives. The report therefore treats melanoma screening as an operating-point selection problem (Section 5.5), and uses interpretability/demonstration artifacts (Sections 6–7) to make the system understandable and presentable in a course setting.
 
 ### 5.2 Summary table (key tracked runs)
 
