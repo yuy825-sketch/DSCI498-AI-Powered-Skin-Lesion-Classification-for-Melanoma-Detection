@@ -17,6 +17,7 @@ I built an end-to-end deep learning system to classify dermatoscopic skin lesion
 - [7. Demo app (Streamlit)](#7-demo-app-streamlit)
 - [8. Limitations and ethical note](#8-limitations-and-ethical-note)
 - [9. Reproducibility](#9-reproducibility)
+- [10. Conclusion](#10-conclusion)
 
 ## 1. Problem statement
 
@@ -25,10 +26,59 @@ Skin lesion classification is a high-impact application of computer vision. The 
 
 ## 2. Dataset
 
-I use HAM10000 (10,015 images, 7 classes). Labels use the `dx` field:
-`akiec`, `bcc`, `bkl`, `df`, `mel`, `nv`, `vasc`.
+I use **HAM10000** (Human Against Machine with 10,000 training images), a widely used dataset of **dermatoscopic skin lesion images** with diagnostic labels and basic patient/lesion metadata.
 
-### 2.1 Dataset statistics (tracked figures)
+Recommended sources (also listed in the repository README):
+- Harvard Dataverse (DOI): `doi:10.7910/DVN/DBW86T`
+- Kaggle mirror: “Skin Cancer MNIST: HAM10000”
+
+### 2.1 Labels (`dx`) and their meaning
+
+The classification target is the `dx` column (7 classes). I use the following label codes and human-readable names:
+
+| `dx` code | Meaning |
+|---|---|
+| `akiec` | Actinic keratoses |
+| `bcc` | Basal cell carcinoma |
+| `bkl` | Benign keratosis-like lesions |
+| `df` | Dermatofibroma |
+| `mel` | Melanoma |
+| `nv` | Melanocytic nevi |
+| `vasc` | Vascular lesions |
+
+### 2.2 Metadata variables (columns)
+
+The project relies on images for training, but the metadata is useful for dataset understanding and reporting. Key columns in `HAM10000_metadata.csv` include:
+
+| Column | Meaning (high level) |
+|---|---|
+| `image_id` | Image identifier (used to locate the `.jpg` file) |
+| `lesion_id` | Lesion identifier (multiple images can belong to the same lesion) |
+| `dx` | Diagnostic label (target class) |
+| `dx_type` | How the diagnosis was obtained (e.g., histopathology, follow-up, consensus, confocal) |
+| `age` | Patient age (years; has a small amount of missingness) |
+| `sex` | Patient sex |
+| `localization` | Anatomical site |
+| `dataset` | Source subset within HAM10000 |
+
+### 2.3 Dataset statistics (class imbalance and sources)
+
+Class counts (N=10,015):
+
+| Class (`dx`) | Count | Fraction |
+|---|---:|---:|
+| `akiec` | 327 | 3.27% |
+| `bcc` | 514 | 5.13% |
+| `bkl` | 1099 | 10.97% |
+| `df` | 115 | 1.15% |
+| `mel` | 1113 | 11.11% |
+| `nv` | 6705 | 66.95% |
+| `vasc` | 142 | 1.42% |
+
+Additional dataset descriptors (from metadata):
+- `dx_type` distribution: `histo` (5340), `follow_up` (3704), `consensus` (902), `confocal` (69)
+- `dataset` subsets: `vidir_molemax` (3954), `vidir_modern` (3363), `rosendahl` (2259), `vienna_dias` (439)
+- Missingness: `age` missing rate is ~0.57%; `sex`/`localization` have no missing values in this CSV.
 
 ![HAM10000 class distribution](dataset/class_distribution.png)
 
@@ -38,19 +88,23 @@ I use HAM10000 (10,015 images, 7 classes). Labels use the `dx` field:
 
 *Figure 2. Metadata overview (age, sex, and top-10 localizations). These covariates can contribute to dataset bias and should be considered when interpreting results.*
 
-### 2.2 Sample examples
+### 2.4 Sample examples
 
 ![HAM10000 sample strip](dataset/samples_strip.png)
 
 *Figure 3. One random example per class (qualitative). Visual overlap across classes explains why misclassifications occur and why thresholding can be useful for sensitivity-first operation.*
 
-Split strategy (implementation detail): I use a lesion-wise grouped split by `lesion_id` into train/val/test with a fixed seed (to reduce leakage from multiple images of the same lesion).
+### 2.5 Split strategy (leakage-aware)
+
+HAM10000 contains multiple images per lesion (`lesion_id`). To reduce train/test leakage, I use a **lesion-wise grouped split** (grouped by `lesion_id`) into train/val/test with a fixed seed.
 
 ## 3. Methods
 
 ### 3.1 CNN classifier
 
 I train a CNN image classifier using EfficientNet backbones with ImageNet-style normalization. The model outputs 7-class logits, and probabilities are obtained via softmax.
+
+Implementation note: the backbone and key hyperparameters are specified in JSON configs under `configs/` (tracked in the repository). Runs write metrics and predictions locally under `runs/`, and presentation-ready exports are copied into `results/`.
 
 ### 3.2 Handling class imbalance
 
@@ -71,6 +125,23 @@ Grad-CAM provides qualitative heatmaps showing image regions most influencing th
 
 I also include a conditional VAE to generate synthetic samples for an augmentation ablation (tracked in `vae_samples_grid.png`).
 
+### 3.6 Preprocessing and augmentation
+
+For all classifier runs, images are resized to a fixed square resolution (e.g., 224 or 260 pixels depending on the config), converted to tensors, and normalized using ImageNet mean/std. Training-time augmentation includes common geometric and color perturbations (e.g., random flips/rotation and light color jitter). This aims to reduce overfitting and improve robustness to minor appearance changes.
+
+### 3.7 Optimization and checkpoint selection
+
+I use AdamW optimization with mixed precision (AMP) enabled for GPU training. A “best checkpoint” is selected based on a validation metric specified in the config, such as:
+- validation accuracy (accuracy-focused run)
+- validation melanoma recall (sensitivity-focused runs)
+
+### 3.8 Evaluation metrics (what I report and why)
+
+Because HAM10000 is imbalanced, I report multiple metrics:
+- **Accuracy**: overall fraction correct; can be inflated by the dominant `nv` class.
+- **Macro-F1**: unweighted average F1 across classes; more informative for minority classes.
+- **Per-class recall**: for each class, recall = TP / (TP + FN). In particular, **melanoma sensitivity** is recall for `mel`.
+
 ## 4. Experiments
 
 I report:
@@ -79,6 +150,19 @@ I report:
 - test per-class recall (including melanoma sensitivity = recall for `mel`)
 
 All tracked experiment outputs (tables/plots) are committed under `results/`. The full run directories (including checkpoints) are kept locally under `runs/`.
+
+### 4.1 Experiment set (ablations and tuning)
+
+I ran a small set of experiments designed to answer:
+1) How much do imbalance-handling strategies affect melanoma recall?
+2) Can I reach high overall accuracy while still documenting a high-sensitivity operating mode?
+
+The tracked experiments include:
+- **Baseline**: EfficientNet-B0 with class-weighted cross-entropy.
+- **Weighted sampler**: rebalance minibatches using a weighted sampler.
+- **Melanoma-weighted loss**: increase the effective weight of melanoma to encourage sensitivity.
+- **cVAE synthetic augmentation**: add generated samples for a controlled augmentation ablation.
+- **Backbone tuning**: EfficientNet-B2 (including a higher-resolution 260px setup) with different checkpoint selection criteria (accuracy vs melanoma recall).
 
 ## 5. Results and analysis
 
@@ -102,7 +186,7 @@ Important nuance: these targets are achieved by **different operating modes** (d
 
 ### 5.3 Accuracy-focused model (best overall accuracy)
 
-![Confusion matrix (accuracy-focused)](confusion_matrix_effnetb2_260_acc.png)
+<img src="confusion_matrix_effnetb2_260_acc.png" width="420" alt="Confusion matrix (accuracy-focused)">
 
 *Figure 4. Confusion matrix for the accuracy-focused EfficientNet-B2@260 run. Accuracy is strong due to the dominant `nv` class, while minority classes (especially `mel`) remain challenging.*
 
@@ -130,7 +214,7 @@ To make this concrete, the threshold sweep tables (e.g., `mel_threshold_effnetb2
 
 ### 5.5 Sensitivity-first training (high melanoma recall under top-1)
 
-![Confusion matrix (sensitivity-first)](confusion_matrix_effnetb2_260_mel_sampler.png)
+<img src="confusion_matrix_effnetb2_260_mel_sampler.png" width="420" alt="Confusion matrix (sensitivity-first)">
 
 *Figure 7. Confusion matrix for the sensitivity-first run (EffNet-B2@260 with sampler + melanoma-weighted loss). Melanoma recall exceeds 0.85 under top-1, but many non-melanoma samples are pulled toward `mel`, which hurts overall accuracy.*
 
@@ -171,3 +255,10 @@ This repository tracks:
 
 Large artifacts are intentionally not committed (dataset and full run directories). When the dataset is present locally, runs can be reproduced via:
 - `python train.py --config <config> --run-name <name>`
+
+## 10. Conclusion
+
+This project demonstrates an end-to-end deep learning workflow on HAM10000 with:
+- strong **overall accuracy** achievable under imbalance (EffNet-B2@260 reaches >0.85 test accuracy)
+- explicit analysis of **melanoma sensitivity** and the **precision/sensitivity trade-off** via thresholding `P(mel)`
+- qualitative interpretability via Grad-CAM and a runnable Streamlit demo for interactive presentation
