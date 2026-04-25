@@ -3,6 +3,12 @@ const siteHeader = document.querySelector(".site-header");
 const navLinks = [...document.querySelectorAll(".site-nav a")];
 const revealNodes = [...document.querySelectorAll(".reveal")];
 const modeButtons = [...document.querySelectorAll(".mode-button")];
+const progressBar = document.getElementById("scroll-progress-bar");
+const zoomableImages = [...document.querySelectorAll(".zoomable")];
+const lightbox = document.getElementById("lightbox");
+const lightboxImage = document.getElementById("lightbox-image");
+const lightboxCaption = document.getElementById("lightbox-caption");
+const lightboxClose = document.getElementById("lightbox-close");
 const modeData = {
   accuracy: {
     kicker: "Highest multiclass accuracy",
@@ -82,6 +88,13 @@ const onScroll = () => {
     const isActive = current && link.getAttribute("href") === `#${current.id}`;
     link.classList.toggle("active", Boolean(isActive));
   });
+
+  if (progressBar) {
+    const scrollTop = window.scrollY;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const percent = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    progressBar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+  }
 };
 
 window.addEventListener("scroll", onScroll, { passive: true });
@@ -132,3 +145,52 @@ modeButtons.forEach((button) => {
 });
 
 assignMode("accuracy");
+
+navLinks.forEach((link) => {
+  link.addEventListener("click", () => {
+    if (siteHeader?.classList.contains("nav-open")) {
+      siteHeader.classList.remove("nav-open");
+      navToggle?.setAttribute("aria-expanded", "false");
+    }
+  });
+});
+
+const closeLightbox = () => {
+  if (!lightbox) {
+    return;
+  }
+
+  lightbox.classList.remove("is-open");
+  lightbox.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("lightbox-open");
+};
+
+zoomableImages.forEach((image) => {
+  image.addEventListener("click", () => {
+    if (!lightbox || !lightboxImage || !lightboxCaption) {
+      return;
+    }
+
+    lightboxImage.src = image.currentSrc || image.src;
+    lightboxImage.alt = image.alt;
+    const captionSource = image.closest("figure")?.querySelector("figcaption");
+    lightboxCaption.textContent = captionSource?.textContent?.trim() || image.alt;
+    lightbox.classList.add("is-open");
+    lightbox.setAttribute("aria-hidden", "false");
+    document.body.classList.add("lightbox-open");
+  });
+});
+
+lightboxClose?.addEventListener("click", closeLightbox);
+
+lightbox?.addEventListener("click", (event) => {
+  if (event.target === lightbox) {
+    closeLightbox();
+  }
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeLightbox();
+  }
+});

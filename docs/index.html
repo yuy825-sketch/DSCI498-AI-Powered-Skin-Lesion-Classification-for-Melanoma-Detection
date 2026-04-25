@@ -18,6 +18,9 @@
     <script defer src="script.js"></script>
   </head>
   <body>
+    <div class="scroll-progress" aria-hidden="true">
+      <span id="scroll-progress-bar"></span>
+    </div>
     <div class="page-shell">
       <header class="site-header">
         <a class="brand" href="#top">
@@ -32,6 +35,8 @@
           <a href="#overview">Overview</a>
           <a href="#dataset">Dataset</a>
           <a href="#experiments">Experiments</a>
+          <a href="#analysis">Analysis</a>
+          <a href="#demo">Demo</a>
           <a href="#deliverables">Deliverables</a>
         </nav>
       </header>
@@ -47,9 +52,9 @@
               separate design targets instead of collapsing them into one score.
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="assets/SkinLesionMelanoma.pdf">Read article</a>
-              <a class="button button-secondary" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/REPORT.md">Open report</a>
-              <a class="button button-ghost" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection">View code</a>
+              <a class="button button-primary" href="assets/SkinLesionMelanoma.pdf" target="_blank" rel="noreferrer">Read article</a>
+              <a class="button button-secondary" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/REPORT.md" target="_blank" rel="noreferrer">Open report</a>
+              <a class="button button-ghost" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection" target="_blank" rel="noreferrer">View code</a>
             </div>
           </div>
           <div class="hero-panel">
@@ -128,21 +133,21 @@
           </div>
           <div class="figure-grid figure-grid-three">
             <figure class="visual-card">
-              <img src="assets/class_distribution.png" alt="HAM10000 class distribution" />
+              <img src="assets/class_distribution.png" alt="HAM10000 class distribution" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Class distribution</strong>
                 <span>`nv` dominates the dataset, so accuracy alone overstates usefulness.</span>
               </figcaption>
             </figure>
             <figure class="visual-card">
-              <img src="assets/metadata_stats.png" alt="HAM10000 metadata overview" />
+              <img src="assets/metadata_stats.png" alt="HAM10000 metadata overview" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Metadata overview</strong>
                 <span>Age, sex, and localization variation motivate subgroup checks later.</span>
               </figcaption>
             </figure>
             <figure class="visual-card">
-              <img src="assets/samples_strip.png" alt="Representative lesion samples across classes" />
+              <img src="assets/samples_strip.png" alt="Representative lesion samples across classes" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Representative samples</strong>
                 <span>Visual overlap between melanoma and benign lesions explains persistent confusion.</span>
@@ -270,7 +275,7 @@
           </div>
         </section>
 
-        <section class="section figure-section reveal">
+        <section id="analysis" class="section figure-section reveal">
           <div class="section-heading">
             <div>
               <p class="eyebrow">Advanced analysis</p>
@@ -293,28 +298,28 @@
           </div>
           <div class="figure-grid figure-grid-two">
             <figure class="visual-card">
-              <img src="assets/reliability.png" alt="Reliability diagram" />
+              <img src="assets/reliability.png" alt="Reliability diagram" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Reliability diagram</strong>
                 <span>Confidence runs slightly above observed accuracy in the upper bins.</span>
               </figcaption>
             </figure>
             <figure class="visual-card">
-              <img src="assets/confidence_hist.png" alt="Confidence histogram" />
+              <img src="assets/confidence_hist.png" alt="Confidence histogram" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Confidence histogram</strong>
                 <span>High-confidence errors cluster near the right edge, motivating calibration-aware reporting.</span>
               </figcaption>
             </figure>
             <figure class="visual-card">
-              <img src="assets/subgroup_sex.png" alt="Melanoma recall by sex" />
+              <img src="assets/subgroup_sex.png" alt="Melanoma recall by sex" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Melanoma recall by sex</strong>
                 <span>Subgroup recall changes substantially once the operating mode shifts toward sensitivity.</span>
               </figcaption>
             </figure>
             <figure class="visual-card">
-              <img src="assets/subgroup_age.png" alt="Melanoma recall by age bucket" />
+              <img src="assets/subgroup_age.png" alt="Melanoma recall by age bucket" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Melanoma recall by age bucket</strong>
                 <span>Older patients are a weak spot under the accuracy-focused mode.</span>
@@ -323,7 +328,7 @@
           </div>
         </section>
 
-        <section class="section figure-section reveal">
+        <section id="demo" class="section figure-section reveal">
           <div class="section-heading">
             <div>
               <p class="eyebrow">Interpretability and demo</p>
@@ -332,14 +337,14 @@
           </div>
           <div class="figure-grid figure-grid-two">
             <figure class="visual-card">
-              <img src="assets/gradcam_overlay.png" alt="Grad-CAM overlay on a melanoma image" />
+              <img src="assets/gradcam_overlay.png" alt="Grad-CAM overlay on a melanoma image" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Grad-CAM overlay</strong>
                 <span>The project uses Grad-CAM as a sanity check: lesion-focused attention can still coincide with a wrong prediction.</span>
               </figcaption>
             </figure>
             <figure class="visual-card">
-              <img src="assets/streamlit_demo.png" alt="Streamlit demo screenshot" />
+              <img src="assets/streamlit_demo.png" alt="Streamlit demo screenshot" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Streamlit demo snapshot</strong>
                 <span>The original app supports image upload, top-k probabilities, and Grad-CAM overlays. This static site keeps that workflow visible without runtime dependencies.</span>
@@ -348,7 +353,7 @@
           </div>
           <div class="figure-grid figure-grid-two compact-top">
             <figure class="visual-card">
-              <img src="assets/training_curves.png" alt="Training curves for the accuracy-focused model" />
+              <img src="assets/training_curves.png" alt="Training curves for the accuracy-focused model" loading="lazy" class="zoomable" />
               <figcaption>
                 <strong>Training dynamics</strong>
                 <span>Validation curves show why checkpoint selection policy matters: the same backbone supports different operating goals.</span>
@@ -361,8 +366,8 @@
                 The Streamlit app remains the runnable demo inside the repository. The new `docs/` site is a static layer for GitHub deployment, course review, and quick scanning without Python environments, model files, or live inference.
               </p>
               <div class="hero-actions small-actions">
-                <a class="button button-secondary" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/app/app.py">View app entry</a>
-                <a class="button button-ghost" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/advanced/README.md">Advanced notes</a>
+                <a class="button button-secondary" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/app/app.py" target="_blank" rel="noreferrer">View app entry</a>
+                <a class="button button-ghost" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/advanced/README.md" target="_blank" rel="noreferrer">Advanced notes</a>
               </div>
             </article>
           </div>
@@ -374,19 +379,19 @@
             <h2>Existing deliverables stay intact</h2>
           </div>
           <div class="deliverable-grid">
-            <a href="assets/SkinLesionMelanoma.pdf">
+            <a href="assets/SkinLesionMelanoma.pdf" target="_blank" rel="noreferrer">
               <strong>Article PDF</strong>
               <span>IEEE-format short paper</span>
             </a>
-            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/REPORT.md">
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/REPORT.md" target="_blank" rel="noreferrer">
               <strong>Full report</strong>
               <span>Long-form project narrative and results</span>
             </a>
-            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/app/app.py">
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/app/app.py" target="_blank" rel="noreferrer">
               <strong>Streamlit app</strong>
               <span>Existing interactive demo remains in the repo</span>
             </a>
-            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/README.md">
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/README.md" target="_blank" rel="noreferrer">
               <strong>Results archive</strong>
               <span>Committed figures, summaries, and analysis files</span>
             </a>
@@ -398,6 +403,14 @@
         <p>Static GitHub Pages version of the DSCI 498 melanoma detection project.</p>
         <p>Built from committed results, article assets, and the existing repository deliverables.</p>
       </footer>
+    </div>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Close image viewer">Close</button>
+      <figure class="lightbox-figure">
+        <img id="lightbox-image" src="" alt="" />
+        <figcaption id="lightbox-caption"></figcaption>
+      </figure>
     </div>
   </body>
 </html>
