@@ -383,6 +383,11 @@ h3 {
   box-shadow: 0 16px 40px rgba(20, 31, 33, 0.1);
 }
 
+.example-card:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+
 .example-meta {
   color: var(--muted);
   font-size: 0.82rem;
@@ -399,6 +404,24 @@ h3 {
   color: var(--muted);
   line-height: 1.5;
   margin-bottom: 0.9rem;
+}
+
+.example-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.example-run {
+  min-width: 12rem;
+}
+
+.example-static-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .example-loading {
@@ -1009,6 +1032,10 @@ h3 {
 
   .example-picker {
     grid-template-columns: 1fr;
+  }
+
+  .example-controls {
+    display: grid;
   }
 
   .hero-copy,

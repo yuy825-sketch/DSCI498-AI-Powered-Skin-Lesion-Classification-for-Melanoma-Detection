@@ -22,7 +22,9 @@ const exampleTitle = document.getElementById("example-title");
 const exampleDescription = document.getElementById("example-description");
 const exampleBars = document.getElementById("example-bars");
 const exampleNote = document.getElementById("example-note");
+const exampleRun = document.getElementById("example-run");
 let exampleTimer = null;
+let selectedExampleKey = "mel_missed";
 const modeData = {
   accuracy: {
     kicker: "Highest multiclass accuracy",
@@ -275,6 +277,8 @@ const renderExample = (exampleKey) => {
     return;
   }
 
+  selectedExampleKey = exampleKey;
+
   exampleImage.src = example.image;
   exampleImage.alt = example.label;
   exampleCaption.textContent = example.caption;
@@ -303,6 +307,10 @@ const renderExample = (exampleKey) => {
     card.classList.toggle("is-active", active);
     card.setAttribute("aria-pressed", String(active));
   });
+
+  if (exampleRun) {
+    exampleRun.textContent = `Replay ${example.label}`;
+  }
 };
 
 const playExample = (exampleKey) => {
@@ -318,17 +326,32 @@ const playExample = (exampleKey) => {
   exampleLoading.hidden = false;
   exampleResult.hidden = true;
   exampleLoadingText.textContent = "Loading precomputed prediction...";
+  exampleCards.forEach((card) => {
+    card.disabled = true;
+  });
+  if (exampleRun) {
+    exampleRun.disabled = true;
+    exampleRun.textContent = "Loading example...";
+  }
 
   exampleTimer = window.setTimeout(() => {
     renderExample(exampleKey);
     exampleLoading.hidden = true;
     exampleResult.hidden = false;
+    exampleCards.forEach((card) => {
+      card.disabled = false;
+    });
+    if (exampleRun) {
+      exampleRun.disabled = false;
+    }
   }, 1600);
 };
 
 exampleCards.forEach((card) => {
   card.addEventListener("click", () => playExample(card.dataset.example));
 });
+
+exampleRun?.addEventListener("click", () => playExample(selectedExampleKey));
 
 if (exampleCards.length > 0) {
   renderExample("mel_missed");
