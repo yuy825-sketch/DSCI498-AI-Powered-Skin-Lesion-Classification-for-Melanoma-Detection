@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Results Deep Dive | Skin Lesion Classification</title>
+    <meta
+      name="description"
+      content="Static results deep dive for AI-Powered Skin Lesion Classification for Melanoma Detection."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Serif+4:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="script.js"></script>
+  </head>
+  <body>
+    <div class="scroll-progress" aria-hidden="true">
+      <span id="scroll-progress-bar"></span>
+    </div>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">DSCI 498</span>
+          <span class="brand-text">Skin Lesion Classification</span>
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="site-nav">
+          <a href="index.html">Home</a>
+          <a href="#compare">Compare</a>
+          <a href="#thresholds">Thresholds</a>
+          <a href="#gallery">Figures</a>
+          <a href="#resources">Resources</a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section class="hero subhero reveal">
+          <div class="hero-copy">
+            <p class="eyebrow">Results page</p>
+            <h1>Metrics, thresholds, and diagnostics in one place</h1>
+            <p class="hero-lead">
+              This page is the static deep-dive companion to the landing page. It keeps the
+              main project website readable while preserving the exact trade-offs that matter
+              for medical-style evaluation.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="assets/SkinLesionMelanoma.pdf" target="_blank" rel="noreferrer">Open article PDF</a>
+              <a class="button button-secondary" href="index.html">Back to home</a>
+            </div>
+          </div>
+          <div class="hero-panel">
+            <div class="metric-card">
+              <span class="metric-label">Threshold mode</span>
+              <strong>0.322 / 0.855</strong>
+              <span class="metric-note">Precision / recall at melanoma threshold 0.13</span>
+            </div>
+            <div class="metric-card accent">
+              <span class="metric-label">Top-1 screening mode</span>
+              <strong>0.8548</strong>
+              <span class="metric-note">Melanoma recall with sensitivity-first training</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Multiclass best</span>
+              <strong>0.8614</strong>
+              <span class="metric-note">Accuracy-focused EffNet-B2 @ 260px</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="compare" class="section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Compare modes</p>
+              <h2>Three ways to talk about the same project</h2>
+            </div>
+          </div>
+          <div class="insight-grid">
+            <article class="insight-card">
+              <span class="step">A</span>
+              <h3>Accuracy-focused classifier</h3>
+              <p>Best for headline multiclass performance and confusion-matrix reporting.</p>
+              <ul class="story-list">
+                <li>Accuracy: 0.8614</li>
+                <li>Macro-F1: 0.7386</li>
+                <li>Melanoma recall: 0.5403</li>
+              </ul>
+            </article>
+            <article class="insight-card">
+              <span class="step">B</span>
+              <h3>Sensitivity-first classifier</h3>
+              <p>Best for top-1 melanoma recovery, but no longer a strong general multiclass classifier.</p>
+              <ul class="story-list">
+                <li>Accuracy: 0.5374</li>
+                <li>Macro-F1: 0.5666</li>
+                <li>Melanoma recall: 0.8548</li>
+              </ul>
+            </article>
+            <article class="insight-card">
+              <span class="step">C</span>
+              <h3>Thresholded melanoma detector</h3>
+              <p>Best for explaining how decision policy can change without retraining the backbone.</p>
+              <ul class="story-list">
+                <li>Threshold on P(mel): 0.13</li>
+                <li>Precision: 0.322</li>
+                <li>Recall: 0.855</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="thresholds" class="section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Threshold analysis</p>
+              <h2>Operating-point analysis changes the story more than another backbone would</h2>
+            </div>
+          </div>
+          <div class="figure-grid figure-grid-two">
+            <figure class="visual-card">
+              <img src="assets/mel_threshold_curve.png" alt="Melanoma threshold precision recall curve" loading="lazy" class="zoomable" />
+              <figcaption>
+                <strong>Melanoma threshold curve</strong>
+                <span>The tuned EffNet-B2 model reaches recall near 0.855 at threshold 0.13, but precision stays around 0.322.</span>
+              </figcaption>
+            </figure>
+            <article class="story-card muted support-card">
+              <p class="eyebrow">Interpretation</p>
+              <h3>Why this matters</h3>
+              <p>
+                Threshold analysis is the cleanest way to explain that a clinically sensitive
+                screening mode does not require the same objective as a multiclass leaderboard
+                model. It also makes the false-positive cost explicit instead of burying it in
+                a single top-1 label.
+              </p>
+              <div class="table-wrap compact-table">
+                <table class="metrics-table">
+                  <thead>
+                    <tr>
+                      <th>Setting</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Threshold</td>
+                      <td>0.13</td>
+                    </tr>
+                    <tr>
+                      <td>Precision</td>
+                      <td>0.322</td>
+                    </tr>
+                    <tr>
+                      <td>Recall</td>
+                      <td>0.855</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="gallery" class="section figure-section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Figure gallery</p>
+              <h2>The site now supports closer figure inspection without leaving the page</h2>
+            </div>
+          </div>
+          <div class="figure-grid figure-grid-two">
+            <figure class="visual-card">
+              <img src="assets/confusion_acc.png" alt="Accuracy-focused confusion matrix" loading="lazy" class="zoomable" />
+              <figcaption>
+                <strong>Accuracy-focused confusion matrix</strong>
+                <span>Best overall multiclass performance, but melanoma misses remain visible.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/confusion_sens.png" alt="Sensitivity-first confusion matrix" loading="lazy" class="zoomable" />
+              <figcaption>
+                <strong>Sensitivity-first confusion matrix</strong>
+                <span>Melanoma recall improves while non-melanoma false positives rise sharply.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/reliability.png" alt="Reliability diagram for the accuracy-focused model" loading="lazy" class="zoomable" />
+              <figcaption>
+                <strong>Reliability diagram</strong>
+                <span>Confidence slightly exceeds observed accuracy in upper-confidence bins.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/subgroup_age.png" alt="Melanoma recall by age bucket" loading="lazy" class="zoomable" />
+              <figcaption>
+                <strong>Age subgroup recall</strong>
+                <span>The 80+ bucket is much weaker under accuracy-first selection.</span>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="resources" class="deliverables reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Resources</p>
+              <h2>Use the website as a front door, then branch into the right artifact</h2>
+            </div>
+          </div>
+          <div class="deliverable-grid">
+            <a href="assets/SkinLesionMelanoma.pdf" target="_blank" rel="noreferrer">
+              <strong>Article PDF</strong>
+              <span>Final IEEE-format article used for submission</span>
+            </a>
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/REPORT.md" target="_blank" rel="noreferrer">
+              <strong>Long report</strong>
+              <span>Expanded narrative with more tables, figures, and discussion</span>
+            </a>
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/app/app.py" target="_blank" rel="noreferrer">
+              <strong>Streamlit app</strong>
+              <span>The original interactive demo remains available in the repository</span>
+            </a>
+            <a href="index.html">
+              <strong>Landing page</strong>
+              <span>Return to the high-level project overview and static demo framing</span>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>Results deep dive for the DSCI 498 melanoma detection project.</p>
+        <p>Static, GitHub-deployable, and backed by committed figures and article assets.</p>
+      </footer>
+    </div>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Close image viewer">Close</button>
+      <figure class="lightbox-figure">
+        <img id="lightbox-image" src="" alt="" />
+        <figcaption id="lightbox-caption"></figcaption>
+      </figure>
+    </div>
+  </body>
+</html>

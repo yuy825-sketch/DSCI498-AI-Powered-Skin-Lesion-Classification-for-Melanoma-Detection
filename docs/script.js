@@ -1,6 +1,8 @@
 const navToggle = document.querySelector(".nav-toggle");
 const siteHeader = document.querySelector(".site-header");
 const navLinks = [...document.querySelectorAll(".site-nav a")];
+const sectionNavLinks = navLinks.filter((link) => link.getAttribute("href")?.startsWith("#"));
+const pageNavLinks = navLinks.filter((link) => !link.getAttribute("href")?.startsWith("#"));
 const revealNodes = [...document.querySelectorAll(".reveal")];
 const modeButtons = [...document.querySelectorAll(".mode-button")];
 const progressBar = document.getElementById("scroll-progress-bar");
@@ -74,7 +76,7 @@ if (navToggle && siteHeader) {
   });
 }
 
-const sectionIds = navLinks
+const sectionIds = sectionNavLinks
   .map((link) => document.querySelector(link.getAttribute("href")))
   .filter(Boolean);
 
@@ -84,7 +86,7 @@ const onScroll = () => {
     return rect.top <= 140 && rect.bottom >= 140;
   });
 
-  navLinks.forEach((link) => {
+  sectionNavLinks.forEach((link) => {
     const isActive = current && link.getAttribute("href") === `#${current.id}`;
     link.classList.toggle("active", Boolean(isActive));
   });
@@ -145,6 +147,16 @@ modeButtons.forEach((button) => {
 });
 
 assignMode("accuracy");
+
+pageNavLinks.forEach((link) => {
+  const href = link.getAttribute("href");
+  if (!href) {
+    return;
+  }
+
+  const currentPage = window.location.pathname.split("/").pop() || "index.html";
+  link.classList.toggle("active", href === currentPage);
+});
 
 navLinks.forEach((link) => {
   link.addEventListener("click", () => {
