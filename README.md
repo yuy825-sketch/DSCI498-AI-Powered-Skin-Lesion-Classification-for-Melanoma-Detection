@@ -5,6 +5,7 @@ This repository contains an end-to-end deep learning project for **skin lesion i
 Quick links:
 - Full report: [`results/REPORT.md`](results/REPORT.md)
 - Results index: [`results/README.md`](results/README.md)
+- Advanced post-hoc analysis: [`results/advanced/README.md`](results/advanced/README.md)
 
 ## Project goals
 - Train a strong CNN classifier on HAM10000
@@ -139,6 +140,7 @@ Full results and figure notes:
 - Results report: `results/REPORT.md`
 - Figure index: `results/FIGURES.md`
 - Grad-CAM notes: `results/gradcam/FIGURES.md`
+- Advanced confidence + subgroup analysis: `results/advanced/README.md`
 
 ### Limitations
 - This is a course project and not a clinically validated system.

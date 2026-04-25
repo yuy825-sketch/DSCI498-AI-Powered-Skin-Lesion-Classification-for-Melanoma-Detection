@@ -1,6 +1,7 @@
 # Local-only planning and notes (do not push)
 /info.md
 /project/
+/presentation/
 
 # Reproducibility run artifacts (do not push by default)
 /runs/**

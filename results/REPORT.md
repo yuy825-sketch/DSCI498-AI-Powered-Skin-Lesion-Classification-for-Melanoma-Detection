@@ -4,9 +4,9 @@ This report is written for course submission. It documents the dataset, methods,
 
 ## Abstract
 
-This project implements an end-to-end deep learning system to classify dermatoscopic skin lesion images from the **HAM10000** dataset (7 diagnostic categories) [1]. The work emphasizes (i) strong overall multiclass performance under severe class imbalance and (ii) **melanoma sensitivity** (recall for `mel`) as a safety-critical metric. Multiple imbalance-handling strategies are evaluated (class-weighted loss, weighted sampling, melanoma upweighting, and a small synthetic augmentation ablation). Confusion matrices and per-class recall are reported, and melanoma detection operating points are analyzed by thresholding the model’s `P(mel)` output.
+This project implements an end-to-end deep learning system to classify dermatoscopic skin lesion images from the **HAM10000** dataset (7 diagnostic categories) [1]. The work emphasizes (i) strong overall multiclass performance under severe class imbalance and (ii) **melanoma sensitivity** (recall for `mel`) as a safety-critical metric. Multiple imbalance-handling strategies are evaluated (class-weighted loss, weighted sampling, melanoma upweighting, and a small synthetic augmentation ablation). Confusion matrices and per-class recall are reported, melanoma detection operating points are analyzed by thresholding the model’s `P(mel)` output, and an added post-hoc analysis examines confidence calibration and subgroup behavior.
 
-On the fixed lesion-wise split used throughout the report, the best accuracy-focused model (EfficientNet-B2 @ 260px) reaches **0.8614** test accuracy and **0.7386** macro-F1, while a sensitivity-first training setup reaches **0.8548** top-1 melanoma recall at the cost of overall accuracy. A practical sensitivity-first operating mode can also be obtained via thresholding: for an EfficientNet-B2 melanoma-aware model, selecting a threshold that enforces **recall ≥ 0.85** yields **precision ≈ 0.322** with **recall ≈ 0.855** on the test set. Qualitative interpretability via Grad-CAM [3] and a Streamlit demo app for interactive upload → prediction → heatmap visualization are included.
+On the fixed lesion-wise split used throughout the report, the best accuracy-focused model (EfficientNet-B2 @ 260px) reaches **0.8614** test accuracy and **0.7386** macro-F1, while a sensitivity-first training setup reaches **0.8548** top-1 melanoma recall at the cost of overall accuracy. A practical sensitivity-first operating mode can also be obtained via thresholding: for an EfficientNet-B2 melanoma-aware model, selecting a threshold that enforces **recall ≥ 0.85** yields **precision ≈ 0.322** with **recall ≈ 0.855** on the test set. In the new post-hoc analysis, the accuracy-focused model shows moderate overconfidence (mean top-1 confidence **0.8735** vs accuracy **0.8614**, **ECE = 0.0484**), and subgroup recall analysis highlights that melanoma recall is lower for female and older patients in the accuracy-focused operating mode. Qualitative interpretability via Grad-CAM [3] and a Streamlit demo app for interactive upload → prediction → heatmap visualization are included.
 
 ## Table of contents
 
@@ -48,7 +48,7 @@ Dataset sources:
 - Harvard Dataverse (DOI): `doi:10.7910/DVN/DBW86T` [17]
 - Kaggle mirror: “Skin Cancer MNIST: HAM10000” [16]
 
-HAM10000 images are **dermoscopic photographs** captured under clinical imaging setups (magnified, standardized lighting). The dataset aggregates multiple sources and multiple label acquisition methods, which makes it more diverse than many single-source collections, but also introduces potential dataset shift and label uncertainty considerations [1]. In this project, images are the primary learning signal; metadata is used mainly for dataset understanding, visualization, and reporting rather than as a model input.
+HAM10000 images are **dermoscopic photographs** captured under clinical imaging setups (magnified, standardized lighting). The dataset aggregates multiple sources and multiple label acquisition methods, which makes it more diverse than many single-source collections, but also introduces potential dataset shift and label uncertainty considerations [1]. In this project, images are the primary learning signal; metadata is used mainly for dataset understanding, visualization, reporting, and subgroup analysis rather than as a model input.
 
 ### 2.1 Labels (`dx`) and their meaning
 
@@ -271,6 +271,27 @@ Macro-F1 is the mean over classes:
 \mathrm{MacroF1} = \frac{1}{K}\sum_{c=1}^{K} F1_c.
 ```
 
+### 3.9 Post-hoc confidence and subgroup diagnostics
+
+To extend the analysis without retraining the models, I add a post-hoc evaluation layer on top of the saved test predictions. This analysis uses the stored class probabilities for each test image together with the HAM10000 metadata CSV.
+
+For confidence calibration, I use:
+- **top-1 confidence**: the predicted class probability `max_k p_k`
+- **expected calibration error (ECE)**: the average gap between confidence and observed accuracy across confidence bins
+- **Brier score**: mean squared error between the predicted probability vector and the one-hot target
+
+With `B` bins, ECE is computed as:
+```math
+\mathrm{ECE} = \sum_{b=1}^{B}\frac{|S_b|}{n}\left|\mathrm{acc}(S_b)-\mathrm{conf}(S_b)\right|,
+```
+where `S_b` is the set of test samples whose confidence falls into bin `b`.
+
+For subgroup analysis, the test split is joined with metadata using `image_id`, and melanoma recall is summarized by:
+- `sex` subgroup (`female`, `male`, `unknown`)
+- age buckets (`<40`, `40-59`, `60-79`, `80+`, `unknown`)
+
+This post-hoc layer does not alter the trained models. Its purpose is to check whether confidence is decision-ready and whether melanoma sensitivity is consistent across simple patient metadata groups.
+
 ## 4. Experiments
 
 All experiments are evaluated on the same held-out test split (lesion-wise grouped). The evaluation reports:
@@ -282,6 +303,8 @@ For each tracked run, the following artifacts are produced and summarized in thi
 - confusion matrix (multiclass error structure)
 - training curves (training dynamics and checkpoint selection behavior)
 - melanoma threshold curve (precision/recall vs threshold using `P(mel)`)
+- reliability diagram / confidence histogram (confidence behavior)
+- subgroup melanoma-recall charts by sex and age bucket
 
 The goal is not only to present a single “best score”, but to explain *why* certain objectives (overall accuracy vs melanoma recall) pull the model toward different operating points.
 
@@ -422,7 +445,59 @@ Interpretation:
 
 Analysis: This run demonstrates that explicitly optimizing for melanoma sensitivity can meet a sensitivity target, but it can create an impractical classifier if not paired with a thresholding policy or additional calibration. In terms of course-report narrative, the main value of this experiment is to make the safety trade-off visible and to motivate why “best model” depends on the objective.
 
-### 5.7 Error patterns and practical operating recommendation
+### 5.7 Confidence calibration and reliability
+
+The strong accuracy-focused model is useful as a general multiclass classifier, but its probabilities should also be checked before using them in a screening-style workflow.
+
+<img src="advanced/reliability_effnetb2_260_acc.png" width="520" alt="Reliability diagram for accuracy-focused model">
+
+*Figure 8. Reliability diagram for the accuracy-focused EfficientNet-B2@260 run. Observed bin accuracy generally tracks confidence, but the model is still slightly overconfident in several mid/high-confidence bins.*
+
+<img src="advanced/confidence_hist_effnetb2_260_acc.png" width="520" alt="Confidence histogram for accuracy-focused model">
+
+*Figure 9. Confidence histogram for the accuracy-focused model, split by correct vs incorrect predictions. Most predictions are high-confidence, and some errors also occur in the high-confidence region, which is a warning sign for decision support use.*
+
+Quantitatively, the accuracy-focused model has:
+- test accuracy = **0.8614**
+- mean top-1 confidence = **0.8735**
+- expected calibration error (ECE) = **0.0484**
+- Brier score = **0.2211**
+- negative log-likelihood = **0.5244**
+
+Interpretation:
+- The confidence quality is not catastrophic, but it is **not perfectly calibrated** either; average confidence is slightly above realized accuracy.
+- This matters because thresholding and user-facing probability displays implicitly assume that predicted probabilities have some reliability.
+- In a course-project framing, these plots strengthen the story by showing that model evaluation is not limited to accuracy and recall; it also asks whether the model is **appropriately certain** when it makes predictions.
+
+### 5.8 Metadata subgroup analysis
+
+Although metadata is not used as a model input, it is useful for checking whether melanoma sensitivity varies across simple patient subgroups. Here I compare the accuracy-focused model against the sensitivity-first model on the same shared test split.
+
+<img src="advanced/mel_recall_by_sex_compare.png" width="520" alt="Melanoma recall by sex">
+
+*Figure 10. Melanoma recall by sex. The sensitivity-first model improves melanoma recall for both male and female patients, but the accuracy-focused model shows weaker recall for the female subgroup.*
+
+<img src="advanced/mel_recall_by_age_compare.png" width="520" alt="Melanoma recall by age bucket">
+
+*Figure 11. Melanoma recall by age bucket. The sensitivity-first model improves recall across all age groups with melanoma cases, while the accuracy-focused model is weakest in the `80+` bucket.*
+
+Representative subgroup values:
+
+| Subgroup | Accuracy-focused mel recall | Sensitivity-first mel recall | Mel cases |
+|---|---:|---:|---:|
+| Female | 0.424 | 0.727 | 33 |
+| Male | 0.582 | 0.901 | 91 |
+| `<40` | 0.455 | 0.727 | 11 |
+| `40-59` | 0.514 | 0.971 | 35 |
+| `60-79` | 0.607 | 0.803 | 61 |
+| `80+` | 0.412 | 0.882 | 17 |
+
+Interpretation:
+- The accuracy-focused operating mode is **not uniformly strong across subgroups**; its melanoma recall is especially weak for female patients and the oldest age bucket in this split.
+- The sensitivity-first model raises melanoma recall across all observed subgroups, but the price paid in overall accuracy remains large.
+- Even in a course project, this subgroup view is useful because it shows that aggregate melanoma recall can hide uneven behavior inside the test set.
+
+### 5.9 Error patterns and practical operating recommendation
 
 Two recurring patterns explain most of the observed trade-offs:
 
@@ -442,7 +517,7 @@ Grad-CAM overlays provide qualitative explanations for individual predictions:
 
 ![Grad-CAM example](gradcam/ISIC_0025964_overlay.png)
 
-*Figure 8. Example Grad-CAM overlay. Grad-CAM is qualitative; it highlights image regions that most influence the model’s prediction.*
+*Figure 12. Example Grad-CAM overlay. Grad-CAM is qualitative; it highlights image regions that most influence the model’s prediction.*
 
 Analysis note: Grad-CAM is qualitative. It is most useful for sanity-checking whether the model focuses on the lesion region and for illustrating failure modes (e.g., missed melanoma despite seemingly lesion-focused attention). In this particular example, the image is a melanoma case that the baseline model misclassified, illustrating why sensitivity-oriented evaluation is necessary.
 Analysis note: Grad-CAM is qualitative. It is most useful for sanity-checking whether the model focuses on the lesion region and for illustrating failure modes (e.g., missed melanoma despite seemingly lesion-focused attention). It does not guarantee correctness and can sometimes highlight spurious correlations (e.g., surrounding skin texture or imaging artifacts).
@@ -464,7 +539,7 @@ The interface includes a sidebar for model/run selection and inference settings,
 
 ![Streamlit demo screenshot](streamlit_demo.png)
 
-*Figure 9. Streamlit demo screenshot (upload → predict → Grad-CAM). This supports a live demo during grading/presentation.*
+*Figure 13. Streamlit demo screenshot (upload → predict → Grad-CAM). This supports a live demo during grading/presentation.*
 
 ## 8. Limitations and ethical note
 
@@ -493,11 +568,13 @@ To make the report self-contained, this document focuses on the scientific/analy
 This project demonstrates an end-to-end deep learning workflow on HAM10000 with:
 - strong **overall accuracy** achievable under imbalance (EffNet-B2@260 reaches >0.85 test accuracy)
 - explicit analysis of **melanoma sensitivity** and the **precision/sensitivity trade-off** via thresholding `P(mel)`
+- added **confidence calibration** diagnostics (reliability diagram, confidence histogram, ECE/Brier score)
+- added **subgroup melanoma-recall** analysis using HAM10000 metadata
 - qualitative interpretability via Grad-CAM and a runnable Streamlit demo for interactive presentation
 
-Most importantly, the experiments show that “best model” depends on the objective: an accuracy-focused classifier can be strong overall while still missing melanoma under top-1, whereas sensitivity-first training can increase melanoma recall but may produce too many false positives. Presenting both multiclass metrics and melanoma operating points provides a clearer, more realistic summary of system behavior under class imbalance.
+Most importantly, the experiments show that “best model” depends on the objective: an accuracy-focused classifier can be strong overall while still missing melanoma under top-1, whereas sensitivity-first training can increase melanoma recall but may produce too many false positives. The added post-hoc diagnostics show that the accuracy-focused model is also slightly overconfident and that melanoma recall is not uniform across simple metadata subgroups. Presenting multiclass metrics, melanoma operating points, confidence calibration, and subgroup behavior gives a clearer and more realistic summary of system behavior under class imbalance.
 
-Future work for a more clinically oriented system would include external validation on independent datasets, explicit calibration (so that probabilities are more decision-ready), and evaluation across demographic and acquisition subgroups.
+Future work for a more clinically oriented system would include external validation on independent datasets, calibration-aware training or temperature scaling (to improve probability quality), and broader subgroup evaluation across demographic and acquisition factors.
 
 ## 11. References
 

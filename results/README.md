@@ -10,3 +10,4 @@ Large artifacts are intentionally not committed:
 Start here:
 - Results report (summary + conclusions): `REPORT.md`
 - Figure index (each image meaning + conclusion): `FIGURES.md`
+- Advanced post-hoc analysis (calibration + subgroup diagnostics): `advanced/README.md`
