@@ -107,22 +107,86 @@
               <h2>A short example flow for reviewers and first-time visitors</h2>
             </div>
           </div>
-          <div class="insight-grid">
-            <article class="insight-card">
-              <span class="step">1</span>
-              <h3>Start on the landing page</h3>
-              <p>Read the hero metrics and the experiment summary to understand the three operating modes used in the project.</p>
-            </article>
-            <article class="insight-card">
-              <span class="step">2</span>
-              <h3>Open the deep-dive results page</h3>
-              <p>Use <a class="inline-link" href="results.html">Deep Dive</a> to inspect threshold analysis, confusion matrices, and the static figure gallery.</p>
-            </article>
-            <article class="insight-card">
-              <span class="step">3</span>
-              <h3>Choose the right artifact</h3>
-              <p>Open the PDF article for the final paper, the report for the full narrative, or the Streamlit app entry if you want the runnable demo path.</p>
-            </article>
+          <div class="usage-layout">
+            <div class="usage-steps">
+              <article class="insight-card">
+                <span class="step">1</span>
+                <h3>Select a prepared case</h3>
+                <p>Choose one of the fixed sample lesions below. These examples are precomputed so the site stays GitHub Pages compatible.</p>
+              </article>
+              <article class="insight-card">
+                <span class="step">2</span>
+                <h3>Wait for the static demo to load</h3>
+                <p>The page simulates a short inference delay, then reveals stored top-k probabilities and a Grad-CAM view.</p>
+              </article>
+              <article class="insight-card">
+                <span class="step">3</span>
+                <h3>Follow up with the right artifact</h3>
+                <p>Use <a class="inline-link" href="results.html">Deep Dive</a>, the article PDF, or the Streamlit app entry depending on how much detail you need.</p>
+              </article>
+            </div>
+            <div class="example-demo" id="example-demo">
+              <div class="example-picker" role="tablist" aria-label="Prepared lesion examples">
+                <button
+                  class="example-card is-active"
+                  type="button"
+                  data-example="mel_missed"
+                  aria-pressed="true"
+                >
+                  <img src="assets/example_mel_missed.png" alt="Prepared melanoma example that is missed by the baseline model" loading="lazy" />
+                  <span class="example-meta">False-negative melanoma</span>
+                  <strong>ISIC_0025964</strong>
+                </button>
+                <button
+                  class="example-card"
+                  type="button"
+                  data-example="nv_correct"
+                  aria-pressed="false"
+                >
+                  <img src="assets/example_nv_correct.png" alt="Prepared nevus example with correct prediction" loading="lazy" />
+                  <span class="example-meta">Correct benign nevus</span>
+                  <strong>ISIC_0024698</strong>
+                </button>
+                <button
+                  class="example-card"
+                  type="button"
+                  data-example="bcc_correct"
+                  aria-pressed="false"
+                >
+                  <img src="assets/example_bcc_correct.png" alt="Prepared basal cell carcinoma example with correct prediction" loading="lazy" />
+                  <span class="example-meta">Correct non-melanoma cancer</span>
+                  <strong>ISIC_0028155</strong>
+                </button>
+              </div>
+              <div class="example-output">
+                <div class="example-status" id="example-status">Static example ready. Select a case to replay the prediction flow.</div>
+                <div class="example-loading" id="example-loading" hidden>
+                  <span class="example-spinner" aria-hidden="true"></span>
+                  <span id="example-loading-text">Loading precomputed prediction...</span>
+                </div>
+                <div class="example-result" id="example-result">
+                  <figure class="example-figure">
+                    <img id="example-image" src="assets/example_mel_missed.png" alt="Selected example result" class="zoomable" />
+                    <figcaption id="example-caption">
+                      Prepared example with fixed output for GitHub Pages deployment.
+                    </figcaption>
+                  </figure>
+                  <div class="example-details">
+                    <div class="example-summary">
+                      <p class="eyebrow">Precomputed output</p>
+                      <h3 id="example-title">Melanoma missed under argmax</h3>
+                      <p id="example-description">
+                        This example shows why melanoma sensitivity is tracked separately from overall multiclass accuracy.
+                      </p>
+                    </div>
+                    <div class="example-bars" id="example-bars" aria-live="polite"></div>
+                    <div class="example-note" id="example-note">
+                      Even lesion-focused Grad-CAM can coincide with a wrong prediction, so explanation is not a substitute for sensitivity-oriented evaluation.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

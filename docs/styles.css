@@ -324,11 +324,177 @@ h3 {
   gap: 1rem;
 }
 
+.usage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 1rem;
+}
+
+.usage-steps {
+  display: grid;
+  gap: 1rem;
+}
+
 .insight-card {
   padding: 1.35rem;
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(31, 43, 46, 0.06);
+}
+
+.example-demo {
+  display: grid;
+  gap: 1rem;
+}
+
+.example-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.example-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(31, 43, 46, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.example-card img {
+  display: block;
+  width: 100%;
+  height: 138px;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.example-card:hover,
+.example-card.is-active {
+  transform: translateY(-2px);
+  border-color: rgba(21, 94, 99, 0.35);
+  box-shadow: 0 16px 40px rgba(20, 31, 33, 0.1);
+}
+
+.example-meta {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.example-output {
+  padding: 1.15rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(31, 43, 46, 0.06);
+}
+
+.example-status {
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 0.9rem;
+}
+
+.example-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 3rem;
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  background: rgba(21, 94, 99, 0.08);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.example-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(21, 94, 99, 0.18);
+  border-top-color: var(--teal);
+  border-radius: 999px;
+  animation: spin 0.9s linear infinite;
+}
+
+.example-result {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 1rem;
+}
+
+.example-figure {
+  margin: 0;
+}
+
+.example-figure img {
+  display: block;
+  width: 100%;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.example-figure figcaption {
+  margin-top: 0.7rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.example-details {
+  display: grid;
+  gap: 1rem;
+}
+
+.example-summary p,
+.example-summary #example-description,
+.example-note {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.example-bars {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.prob-row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.prob-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-size: 0.92rem;
+}
+
+.prob-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(21, 94, 99, 0.08);
+  overflow: hidden;
+}
+
+.prob-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rust), var(--teal));
+  transition: width 480ms ease;
+}
+
+.example-note {
+  padding: 0.95rem 1rem;
+  border-left: 4px solid var(--rust);
+  border-radius: 0 16px 16px 0;
+  background: rgba(189, 94, 56, 0.08);
 }
 
 .story-list {
@@ -787,10 +953,12 @@ h3 {
   .band,
   .roadmap,
   .insight-grid,
+  .usage-layout,
   .deliverable-grid,
   .figure-grid-three,
   .figure-grid-two,
   .mode-layout,
+  .example-result,
   .analysis-summary,
   .site-footer {
     grid-template-columns: 1fr;
@@ -837,6 +1005,10 @@ h3 {
 
   .hero {
     padding-top: 3.4rem;
+  }
+
+  .example-picker {
+    grid-template-columns: 1fr;
   }
 
   .hero-copy,
