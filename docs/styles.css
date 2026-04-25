@@ -180,9 +180,9 @@ body::before {
 .eyebrow {
   margin: 0 0 0.9rem;
   color: var(--rust);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -196,17 +196,17 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(3rem, 7vw, 5.4rem);
+  font-size: clamp(2.55rem, 6.2vw, 4.7rem);
   max-width: 12ch;
 }
 
 h2 {
-  font-size: clamp(2rem, 4vw, 3.1rem);
+  font-size: clamp(1.7rem, 3.4vw, 2.55rem);
 }
 
 h3 {
-  font-size: 1.4rem;
-  line-height: 1.08;
+  font-size: 1.22rem;
+  line-height: 1.12;
 }
 
 .hero-lead,
@@ -260,6 +260,16 @@ h3 {
 .button-ghost {
   color: var(--ink);
   border: 1px solid rgba(31, 43, 46, 0.12);
+}
+
+.inline-link {
+  color: var(--teal);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.inline-link:hover {
+  text-decoration: underline;
 }
 
 .hero-panel {
