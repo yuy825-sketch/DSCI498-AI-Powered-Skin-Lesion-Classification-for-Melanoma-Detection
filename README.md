@@ -6,6 +6,15 @@ Quick links:
 - Full report: [`results/REPORT.md`](results/REPORT.md)
 - Results index: [`results/README.md`](results/README.md)
 - Advanced post-hoc analysis: [`results/advanced/README.md`](results/advanced/README.md)
+- Article PDF: [`paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf`](paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf)
+- Article source: [`paper/main.tex`](paper/main.tex)
+
+## Article package
+The IEEE-format article used for final submission is available here:
+
+- PDF: [`paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf`](paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf)
+- LaTeX source: [`paper/main.tex`](paper/main.tex)
+- Submission bundle contents: [`paper/submission/SkinLesionMelanoma/`](paper/submission/SkinLesionMelanoma/)
 
 ## Project goals
 - Train a strong CNN classifier on HAM10000
