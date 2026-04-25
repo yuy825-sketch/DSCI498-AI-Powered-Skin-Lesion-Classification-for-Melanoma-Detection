@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI-Powered Skin Lesion Classification for Melanoma Detection</title>
+    <meta
+      name="description"
+      content="Static project website for AI-Powered Skin Lesion Classification for Melanoma Detection (DSCI 498)."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Serif+4:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="script.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" href="#top">
+          <span class="brand-mark">DSCI 498</span>
+          <span class="brand-text">Skin Lesion Classification</span>
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="site-nav">
+          <a href="#overview">Overview</a>
+          <a href="#dataset">Dataset</a>
+          <a href="#experiments">Experiments</a>
+          <a href="#deliverables">Deliverables</a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section class="hero reveal">
+          <div class="hero-copy">
+            <p class="eyebrow">Static project website for GitHub Pages</p>
+            <h1>AI-Powered Skin Lesion Classification for Melanoma Detection</h1>
+            <p class="hero-lead">
+              A dermatoscopic image classification project on HAM10000 that treats
+              multiclass accuracy, melanoma sensitivity, and model confidence as
+              separate design targets instead of collapsing them into one score.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="../paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf">Read article</a>
+              <a class="button button-secondary" href="../results/REPORT.md">Open report</a>
+              <a class="button button-ghost" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection">View code</a>
+            </div>
+          </div>
+          <div class="hero-panel">
+            <div class="metric-card">
+              <span class="metric-label">Best accuracy</span>
+              <strong>0.8614</strong>
+              <span class="metric-note">EffNet-B2 @ 260px</span>
+            </div>
+            <div class="metric-card accent">
+              <span class="metric-label">Best melanoma recall</span>
+              <strong>0.8548</strong>
+              <span class="metric-note">Sensitivity-first mode</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Calibration error</span>
+              <strong>0.0484</strong>
+              <span class="metric-note">Post-hoc reliability check</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="overview" class="story-grid reveal">
+          <article class="story-card">
+            <p class="eyebrow">What this site is for</p>
+            <h2>A GitHub-friendly version of the project deliverable</h2>
+            <p>
+              The original project already includes a Streamlit demo and a full IEEE-style
+              article. This site is a separate static presentation layer designed for GitHub
+              deployment, where all content has to be precomputed and fixed into HTML, CSS,
+              JavaScript, and exported visuals.
+            </p>
+          </article>
+          <article class="story-card muted">
+            <p class="eyebrow">Core claim</p>
+            <h3>The best model depends on the operating mode</h3>
+            <ul class="story-list">
+              <li>Accuracy-focused selection delivers the strongest overall multiclass score.</li>
+              <li>Sensitivity-first training recovers substantially more melanoma cases.</li>
+              <li>Calibration and subgroup analysis add constraints that neither score captures alone.</li>
+            </ul>
+          </article>
+        </section>
+
+        <section id="dataset" class="band reveal">
+          <div class="band-copy">
+            <p class="eyebrow">Dataset framing</p>
+            <h2>HAM10000 is clinically useful precisely because it is messy</h2>
+            <p>
+              The dataset mixes seven lesion classes, lesion-wise grouping, metadata, severe class
+              imbalance, and real ambiguity between melanoma and benign pigmented lesions. That makes
+              evaluation choices as important as backbone choice.
+            </p>
+          </div>
+          <div class="band-highlights">
+            <div>
+              <span>10,015</span>
+              <p>dermatoscopic images across seven diagnostic categories</p>
+            </div>
+            <div>
+              <span>66.95%</span>
+              <p>of the dataset belongs to melanocytic nevi (`nv`)</p>
+            </div>
+            <div>
+              <span>8012 / 1000 / 1003</span>
+              <p>train, validation, and test images on a lesion-wise split</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="experiments" class="section reveal">
+          <div class="section-heading">
+            <p class="eyebrow">Experiment roadmap</p>
+            <h2>Three operating modes anchor the final story</h2>
+          </div>
+          <div class="roadmap">
+            <article>
+              <span class="step">01</span>
+              <h3>Baseline and imbalance ablations</h3>
+              <p>Class-weighted loss, weighted sampling, melanoma upweighting, and synthetic augmentation.</p>
+            </article>
+            <article>
+              <span class="step">02</span>
+              <h3>Tuned EfficientNet-B2 pipeline</h3>
+              <p>A stronger backbone establishes the accuracy ceiling and the threshold-analysis backbone.</p>
+            </article>
+            <article>
+              <span class="step">03</span>
+              <h3>Post-hoc confidence diagnostics</h3>
+              <p>Reliability and subgroup recall expose where the top-line score stops being enough.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="deliverables" class="deliverables reveal">
+          <div class="section-heading">
+            <p class="eyebrow">Current package</p>
+            <h2>Existing deliverables stay intact</h2>
+          </div>
+          <div class="deliverable-grid">
+            <a href="../paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf">
+              <strong>Article PDF</strong>
+              <span>IEEE-format short paper</span>
+            </a>
+            <a href="../results/REPORT.md">
+              <strong>Full report</strong>
+              <span>Long-form project narrative and results</span>
+            </a>
+            <a href="../app/app.py">
+              <strong>Streamlit app</strong>
+              <span>Existing interactive demo remains in the repo</span>
+            </a>
+            <a href="../results/README.md">
+              <strong>Results archive</strong>
+              <span>Committed figures, summaries, and analysis files</span>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>Static GitHub Pages version of the DSCI 498 melanoma detection project.</p>
+        <p>Built from committed results, article assets, and the existing repository deliverables.</p>
+      </footer>
+    </div>
+  </body>
+</html>
