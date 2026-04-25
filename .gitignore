@@ -9,7 +9,8 @@
 !/runs/README.md
 
 # Data and generated artifacts
-/data/
+/data/*
+!/data/readme_data.txt
 /datasets/
 /artifacts/
 /checkpoints/
