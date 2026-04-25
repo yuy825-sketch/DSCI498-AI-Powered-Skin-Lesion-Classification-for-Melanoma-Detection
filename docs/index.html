@@ -119,6 +119,38 @@
           </div>
         </section>
 
+        <section class="section figure-section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Static dataset views</p>
+              <h2>The class imbalance and metadata spread are part of the problem definition</h2>
+            </div>
+          </div>
+          <div class="figure-grid figure-grid-three">
+            <figure class="visual-card">
+              <img src="assets/class_distribution.png" alt="HAM10000 class distribution" />
+              <figcaption>
+                <strong>Class distribution</strong>
+                <span>`nv` dominates the dataset, so accuracy alone overstates usefulness.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/metadata_stats.png" alt="HAM10000 metadata overview" />
+              <figcaption>
+                <strong>Metadata overview</strong>
+                <span>Age, sex, and localization variation motivate subgroup checks later.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/samples_strip.png" alt="Representative lesion samples across classes" />
+              <figcaption>
+                <strong>Representative samples</strong>
+                <span>Visual overlap between melanoma and benign lesions explains persistent confusion.</span>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
         <section id="experiments" class="section reveal">
           <div class="section-heading">
             <p class="eyebrow">Experiment roadmap</p>
@@ -140,6 +172,154 @@
               <h3>Post-hoc confidence diagnostics</h3>
               <p>Reliability and subgroup recall expose where the top-line score stops being enough.</p>
             </article>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Model comparison</p>
+              <h2>The final submission keeps both the strong classifier and the safety-oriented detector</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Run</th>
+                  <th>Test accuracy</th>
+                  <th>Macro-F1</th>
+                  <th>Melanoma recall</th>
+                  <th>Role in the story</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>EffNet-B2 (mel-select)</td>
+                  <td>0.7697</td>
+                  <td>0.6958</td>
+                  <td>0.7823</td>
+                  <td>Balanced tuned backbone and threshold-analysis anchor</td>
+                </tr>
+                <tr>
+                  <td>EffNet-B2 260px (accuracy-focused)</td>
+                  <td>0.8614</td>
+                  <td>0.7386</td>
+                  <td>0.5403</td>
+                  <td>Best overall multiclass classifier</td>
+                </tr>
+                <tr>
+                  <td>EffNet-B2 260px (sensitivity-first)</td>
+                  <td>0.5374</td>
+                  <td>0.5666</td>
+                  <td>0.8548</td>
+                  <td>Melanoma-aware screening mode</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Static mode switch</p>
+              <h2>One site, three fixed operating views</h2>
+            </div>
+          </div>
+          <div class="mode-panel">
+            <div class="mode-switch" role="tablist" aria-label="Model operating modes">
+              <button class="mode-button is-active" type="button" data-mode="accuracy">Accuracy-focused</button>
+              <button class="mode-button" type="button" data-mode="sensitivity">Sensitivity-first</button>
+              <button class="mode-button" type="button" data-mode="threshold">Threshold screening</button>
+            </div>
+            <div class="mode-layout">
+              <div class="mode-copy">
+                <p class="mode-kicker" id="mode-kicker">Highest multiclass accuracy</p>
+                <h3 id="mode-title">EffNet-B2 @ 260px selected by validation accuracy</h3>
+                <p id="mode-description">
+                  This mode gives the strongest overall classifier, but its top-1 melanoma recall is much lower than the sensitivity-oriented setup.
+                </p>
+                <dl class="mode-metrics">
+                  <div>
+                    <dt>Accuracy</dt>
+                    <dd id="metric-accuracy">0.8614</dd>
+                  </div>
+                  <div>
+                    <dt>Macro-F1</dt>
+                    <dd id="metric-macro">0.7386</dd>
+                  </div>
+                  <div>
+                    <dt>Melanoma recall</dt>
+                    <dd id="metric-mel">0.5403</dd>
+                  </div>
+                </dl>
+                <ul class="mode-points" id="mode-points">
+                  <li>Best final multiclass performance on the test split.</li>
+                  <li>High confidence predictions require calibration checks.</li>
+                  <li>Useful as the “headline accuracy” model in the report and article.</li>
+                </ul>
+              </div>
+              <figure class="mode-visual">
+                <img id="mode-image" src="assets/confusion_acc.png" alt="Accuracy-focused confusion matrix" />
+                <figcaption id="mode-caption">
+                  Confusion matrix for the best accuracy-focused run. Strong `nv` performance helps overall accuracy, but melanoma misses remain visible.
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        <section class="section figure-section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Advanced analysis</p>
+              <h2>Confidence and subgroup diagnostics extend the project beyond standard class scores</h2>
+            </div>
+          </div>
+          <div class="analysis-summary">
+            <article>
+              <strong>Calibration snapshot</strong>
+              <p>Accuracy-focused EffNet-B2 260px: mean confidence 0.8735, accuracy 0.8614, ECE 0.0484.</p>
+            </article>
+            <article>
+              <strong>Sex subgroup gap</strong>
+              <p>Melanoma recall is lower for female cases in the accuracy-focused setting and improves in the sensitivity-first mode.</p>
+            </article>
+            <article>
+              <strong>Age subgroup gap</strong>
+              <p>The 80+ bucket is especially weak under accuracy-first selection, which supports a more cautious medical-AI framing.</p>
+            </article>
+          </div>
+          <div class="figure-grid figure-grid-two">
+            <figure class="visual-card">
+              <img src="assets/reliability.png" alt="Reliability diagram" />
+              <figcaption>
+                <strong>Reliability diagram</strong>
+                <span>Confidence runs slightly above observed accuracy in the upper bins.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/confidence_hist.png" alt="Confidence histogram" />
+              <figcaption>
+                <strong>Confidence histogram</strong>
+                <span>High-confidence errors cluster near the right edge, motivating calibration-aware reporting.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/subgroup_sex.png" alt="Melanoma recall by sex" />
+              <figcaption>
+                <strong>Melanoma recall by sex</strong>
+                <span>Subgroup recall changes substantially once the operating mode shifts toward sensitivity.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/subgroup_age.png" alt="Melanoma recall by age bucket" />
+              <figcaption>
+                <strong>Melanoma recall by age bucket</strong>
+                <span>Older patients are a weak spot under the accuracy-focused mode.</span>
+              </figcaption>
+            </figure>
           </div>
         </section>
 
