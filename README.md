@@ -8,6 +8,8 @@ Quick links:
 - Advanced post-hoc analysis: [`results/advanced/README.md`](results/advanced/README.md)
 - Article PDF: [`paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf`](paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf)
 - Article source: [`paper/main.tex`](paper/main.tex)
+- GitHub Pages source: [`docs/`](docs/)
+- GitHub Pages entry: [`docs/index.html`](docs/index.html)
 
 ## Article package
 The IEEE-format article used for final submission is available here:

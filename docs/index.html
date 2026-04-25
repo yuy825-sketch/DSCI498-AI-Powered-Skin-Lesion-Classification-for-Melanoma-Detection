@@ -47,8 +47,8 @@
               separate design targets instead of collapsing them into one score.
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="../paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf">Read article</a>
-              <a class="button button-secondary" href="../results/REPORT.md">Open report</a>
+              <a class="button button-primary" href="assets/SkinLesionMelanoma.pdf">Read article</a>
+              <a class="button button-secondary" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/REPORT.md">Open report</a>
               <a class="button button-ghost" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection">View code</a>
             </div>
           </div>
@@ -323,25 +323,70 @@
           </div>
         </section>
 
+        <section class="section figure-section reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Interpretability and demo</p>
+              <h2>The repository still includes a live Streamlit app, but the website freezes the most useful views</h2>
+            </div>
+          </div>
+          <div class="figure-grid figure-grid-two">
+            <figure class="visual-card">
+              <img src="assets/gradcam_overlay.png" alt="Grad-CAM overlay on a melanoma image" />
+              <figcaption>
+                <strong>Grad-CAM overlay</strong>
+                <span>The project uses Grad-CAM as a sanity check: lesion-focused attention can still coincide with a wrong prediction.</span>
+              </figcaption>
+            </figure>
+            <figure class="visual-card">
+              <img src="assets/streamlit_demo.png" alt="Streamlit demo screenshot" />
+              <figcaption>
+                <strong>Streamlit demo snapshot</strong>
+                <span>The original app supports image upload, top-k probabilities, and Grad-CAM overlays. This static site keeps that workflow visible without runtime dependencies.</span>
+              </figcaption>
+            </figure>
+          </div>
+          <div class="figure-grid figure-grid-two compact-top">
+            <figure class="visual-card">
+              <img src="assets/training_curves.png" alt="Training curves for the accuracy-focused model" />
+              <figcaption>
+                <strong>Training dynamics</strong>
+                <span>Validation curves show why checkpoint selection policy matters: the same backbone supports different operating goals.</span>
+              </figcaption>
+            </figure>
+            <article class="story-card muted support-card">
+              <p class="eyebrow">Why keep both websites</p>
+              <h3>Streamlit stays interactive, GitHub Pages stays portable</h3>
+              <p>
+                The Streamlit app remains the runnable demo inside the repository. The new `docs/` site is a static layer for GitHub deployment, course review, and quick scanning without Python environments, model files, or live inference.
+              </p>
+              <div class="hero-actions small-actions">
+                <a class="button button-secondary" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/app/app.py">View app entry</a>
+                <a class="button button-ghost" href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/advanced/README.md">Advanced notes</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
         <section id="deliverables" class="deliverables reveal">
           <div class="section-heading">
             <p class="eyebrow">Current package</p>
             <h2>Existing deliverables stay intact</h2>
           </div>
           <div class="deliverable-grid">
-            <a href="../paper/submission/SkinLesionMelanoma/SkinLesionMelanoma.pdf">
+            <a href="assets/SkinLesionMelanoma.pdf">
               <strong>Article PDF</strong>
               <span>IEEE-format short paper</span>
             </a>
-            <a href="../results/REPORT.md">
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/REPORT.md">
               <strong>Full report</strong>
               <span>Long-form project narrative and results</span>
             </a>
-            <a href="../app/app.py">
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/app/app.py">
               <strong>Streamlit app</strong>
               <span>Existing interactive demo remains in the repo</span>
             </a>
-            <a href="../results/README.md">
+            <a href="https://github.com/yuy825-sketch/DSCI498-AI-Powered-Skin-Lesion-Classification-for-Melanoma-Detection/blob/main/results/README.md">
               <strong>Results archive</strong>
               <span>Committed figures, summaries, and analysis files</span>
             </a>
